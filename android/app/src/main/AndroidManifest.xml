@@ -13,7 +13,12 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <application android:theme="@style/AppTheme" android:label="BradFlix" android:usesCleartextTraffic="false">
+    <application
+        android:theme="@style/AppTheme"
+        android:label="BradFlix"
+        android:icon="@drawable/bradflix_icon"
+        android:roundIcon="@drawable/bradflix_icon"
+        android:usesCleartextTraffic="false">
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.updates"
             android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />
