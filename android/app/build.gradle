@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId 'tv.bradflix.hub'
         minSdk 23
-        targetSdk 28
+        targetSdk 35
         versionCode project.findProperty('buildVersionCode')?.toString()?.toInteger() ?: 1
         versionName project.findProperty('buildVersionName')?.toString() ?: '0.1.0'
     }
