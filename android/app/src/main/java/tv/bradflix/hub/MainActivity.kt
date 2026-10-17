@@ -17,7 +17,7 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-private data class Provider(val name: String, val packageName: String)
+private data class Provider(val name: String, val packageName: String, val group: String = "Streaming")
 
 class MainActivity : Activity() {
     private val prefs by lazy { getSharedPreferences("bradflix", MODE_PRIVATE) }
@@ -41,13 +41,13 @@ class MainActivity : Activity() {
         )
         return runCatching {
             val array = JSONArray(raw)
-            MutableList(array.length()) { i -> val item = array.getJSONObject(i); Provider(item.getString("name"), item.getString("package")) }
+            MutableList(array.length()) { i -> val item = array.getJSONObject(i); Provider(item.getString("name"), item.getString("package"), item.optString("group", "Streaming")) }
         }.getOrDefault(mutableListOf())
     }
 
     private fun saveProviders() {
         val array = JSONArray()
-        providers.forEach { array.put(JSONObject().put("name", it.name).put("package", it.packageName)) }
+        providers.forEach { array.put(JSONObject().put("name", it.name).put("package", it.packageName).put("group", it.group)) }
         prefs.edit().putString("providers", array.toString()).apply()
     }
 
@@ -57,19 +57,24 @@ class MainActivity : Activity() {
         val title = TextView(this).apply { text = "BRADFLIX"; textSize = 32f; setTextColor(Color.WHITE); letterSpacing = .12f }
         root.addView(title)
         root.addView(TextView(this).apply { text = "Your streaming apps, organized your way"; textSize = 18f; setTextColor(Color.LTGRAY); setPadding(0, 4, 0, 24) })
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        root.addView(row)
-        providers.forEach { provider ->
-            val button = Button(this).apply {
-                text = provider.name
-                textSize = 17f
-                isFocusable = true; isFocusableInTouchMode = true
-                setTextColor(Color.WHITE); setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(34, 38, 52)))
-                setOnFocusChangeListener { v, focused -> v.setBackgroundTintList(android.content.res.ColorStateList.valueOf(if (focused) purple else Color.rgb(34, 38, 52))) }
-                setOnClickListener { launchProvider(provider) }
-                setOnLongClickListener { editProvider(provider); true }
+        var firstProviderButton: Button? = null
+        providers.groupBy { it.group.ifBlank { "Streaming" } }.forEach { (group, entries) ->
+            root.addView(TextView(this).apply { text = group; textSize = 20f; setTextColor(Color.WHITE); setPadding(0, 14, 0, 8) })
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+            root.addView(row)
+            entries.forEach { provider ->
+                val button = Button(this).apply {
+                    text = provider.name
+                    textSize = 17f
+                    isFocusable = true; isFocusableInTouchMode = true
+                    setTextColor(Color.WHITE); setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(34, 38, 52)))
+                    setOnFocusChangeListener { v, focused -> v.setBackgroundTintList(android.content.res.ColorStateList.valueOf(if (focused) purple else Color.rgb(34, 38, 52))) }
+                    setOnClickListener { launchProvider(provider) }
+                    setOnLongClickListener { editProvider(provider); true }
+                }
+                if (firstProviderButton == null) firstProviderButton = button
+                row.addView(button, LinearLayout.LayoutParams(220, 130).apply { setMargins(0, 0, 18, 0) })
             }
-            row.addView(button, LinearLayout.LayoutParams(220, 130).apply { setMargins(0, 0, 18, 0) })
         }
         if (providers.isEmpty()) root.addView(TextView(this).apply { text = "Add a provider to get started."; setTextColor(Color.WHITE); textSize = 20f })
         val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, 24, 0, 0) }
@@ -78,7 +83,7 @@ class MainActivity : Activity() {
         actions.addView(actionButton("Check for updates", { checkForUpdate(showUpToDate = true) }))
         actions.addView(actionButton("Customize", ::customize))
         root.addView(TextView(this).apply { text = "Select an app to open it. Long-press an app to edit or remove it. Use the Android TV remote arrows and Select button."; textSize = 15f; setTextColor(Color.GRAY); setPadding(0, 26, 0, 0) })
-        root.post { root.findFocus()?.clearFocus(); (row.getChildAt(0) as? View)?.requestFocus() }
+        root.post { root.findFocus()?.clearFocus(); firstProviderButton?.requestFocus() ?: actions.getChildAt(0)?.requestFocus() }
     }
 
     private fun actionButton(label: String, action: () -> Unit) = Button(this).apply {
@@ -105,20 +110,20 @@ class MainActivity : Activity() {
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(32, 8, 32, 0) }
         val name = EditText(this).apply { hint = "Display name"; setText(old?.name ?: ""); isSingleLine = true }
         val pkg = EditText(this).apply { hint = "Android app package name"; setText(old?.packageName ?: ""); isSingleLine = true }
-        box.addView(name); box.addView(pkg)
+        val group = EditText(this).apply { hint = "Home group (for example: Movies)"; setText(old?.group ?: "Streaming"); isSingleLine = true }
+        box.addView(name); box.addView(pkg); box.addView(group)
         AlertDialog.Builder(this).setTitle(if (old == null) "Add a provider app" else "Edit provider app").setView(box)
             .setNegativeButton("Cancel", null).setPositiveButton("Save") { _, _ ->
                 val newName = name.text.toString().trim(); val newPkg = pkg.text.toString().trim()
                 if (newName.isNotEmpty() && newPkg.matches(Regex("[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)+"))) {
                     if (old != null) providers.remove(old)
-                    providers.add(Provider(newName, newPkg)); saveProviders(); render()
+                    providers.add(Provider(newName, newPkg, group.text.toString().trim().ifBlank { "Streaming" })); saveProviders(); render()
                 } else Toast.makeText(this, "Enter a name and a valid package name", Toast.LENGTH_LONG).show()
             }.show()
     }
 
     private fun customize() {
         val options = arrayOf("Violet", "Ocean", "Forest", "Rose")
-        val colors = intArrayOf(Color.rgb(139,92,246), Color.rgb(14,165,233), Color.rgb(34,197,94), Color.rgb(244,63,94))
         AlertDialog.Builder(this).setTitle("Accent color").setSingleChoiceItems(options, prefs.getInt("accent", 0)) { dialog, which ->
             prefs.edit().putInt("accent", which).apply(); dialog.dismiss(); render()
         }.setNegativeButton("Done", null).show()
