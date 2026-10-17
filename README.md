@@ -1,59 +1,53 @@
 # BradFlix for Android TV
 
-BradFlix is a customizable home for streaming apps on Android TV. The first Android version gives you a remote-friendly row of provider apps, editable names and package IDs, an accent color choice, and update checks against published GitHub Releases.
+BradFlix is a customizable movie and series discovery app for Android TV. Its Android interface is based on the catalog browser included in the supplied BradFlix source, with profiles, configurable catalogs, search, watchlists, add-ons, themes, and TV remote navigation.
 
-## What this version does
+## What BradFlix does
 
-- Navigate with the Android TV remote's D-pad and Select button.
-- Launch streaming apps already installed on the device.
-- Add provider shortcuts with custom names and home groups. Long-press a shortcut to edit its name, package ID, or group, or remove it.
-- Pick an accent color.
-- Check for updates when the app opens or from **Check for updates**. The app downloads a release APK only after you publish it from a successful GitHub Actions build, then hands installation to Android's package installer.
-- Build debug and, when signing is configured, signed APK artifacts in GitHub Actions after each push to `main`.
+- Browse and search movie and series catalogs through the built-in catalog provider and Stremio-compatible catalog add-ons you choose.
+- Arrange and enable catalogs on Home and Discover, create profiles and watchlists, and keep history and settings on the TV.
+- Use the Android TV remote's directional pad and Select button across the app. The TV layout has larger artwork, text, and focus highlights.
+- Open a playable HTTP(S) source through Android's video-player chooser. Install a compatible player if Android does not offer one. Add-on sources and playback are controlled by the add-on and your player.
+- Check for a published update when the app opens. Updates appear only after a signed APK from a successful GitHub Actions build has been selected and published using **Publish Android TV update**. Installation is confirmed by Android.
+- Build a debug APK in GitHub Actions after a push to `main`, or with **Actions → Android TV build → Run workflow**.
 
-This is an early Android TV hub shell. It does not yet bring the Linux app's Stremio catalog browser or mpv playback to Android, nor does it include the streaming providers' licensed catalogs. Provider playback opens the provider's own installed app. Each service controls its own account, subscription, and playback.
+BradFlix is a discovery and playback client. It does not include every streaming service's licensed catalog or subscription, and it cannot unlock paid services. Catalog coverage depends on the metadata catalogs and add-ons you install. For a provider's licensed video, use that provider's official app and account.
 
-## Build an APK
+## Build and install
 
-Push a change to `main`, or open **Actions → Android TV build → Run workflow**. A successful run attaches `bradflix-android-tv-debug`, a sideloadable debug APK. Debug builds are for testing and cannot receive updates from a signed release because Android requires the same signing key for updates.
+A successful **Android TV build** run uploads `bradflix-android-tv-debug` for testing. Debug APKs are signed differently and cannot update a signed installation. For in-app updates, configure signing once, then use the release publishing flow below.
 
-## Enable signed in-app updates
+## Configure signing for in-app updates
 
-Android only accepts an update APK when it is signed with the same key as the installed app. Create a private release key and add these four repository Actions secrets:
+Android accepts an update only when it is signed with the same key as the installed app. Add these four repository Actions secrets:
 
 - `ANDROID_KEYSTORE_BASE64`: base64-encoded Java keystore file
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_PASSWORD`
 
-Never commit the keystore or passwords. Losing the signing key prevents updates over an existing installation. If you first installed the debug APK, uninstall it before installing a signed release; uninstalling removes its app data.
+Never commit the keystore or passwords. Keep a secure backup of the signing key. If you initially installed the debug APK, uninstall it before installing a signed release; uninstalling removes app data.
 
-## Publish an update from a successful build
+## Publish an update after a successful build
 
-Each successful build with the signing secrets configured uploads a `bradflix-android-tv-release` APK artifact, but does not publish it automatically. To choose which successful build becomes the update:
+The build workflow uploads a signed APK artifact when all four signing secrets are set. It does not publish every build automatically. To choose a successful build as the update:
 
 1. Open **Actions → Android TV build** and select the successful run you want.
-2. Copy the numeric run ID from its page URL (the digits after `/runs/`).
+2. Copy the numeric run ID from that run's URL (the digits after `/runs/`).
 3. Open **Actions → Publish Android TV update → Run workflow**.
 4. Enter that run ID and start the workflow.
 
-The publishing workflow checks that the selected run succeeded on `main` and contains a signed APK, then creates a GitHub Release. BradFlix checks the latest release when it opens and offers the update. Android may ask once to allow BradFlix to install updates; the final install is confirmed by Android's package installer.
+The publish workflow verifies that the selected run succeeded on `main` and includes a signed APK before creating the public GitHub Release. BradFlix checks the latest published release when it opens and prompts to install a newer version. Android may ask once to allow BradFlix to install updates; the Android package installer then confirms the installation.
 
-Keep the keystore and passwords backed up securely. Losing the signing key prevents updates over an existing installation. Never commit the keystore or passwords to the repository.
+## Android TV limitations
 
-## Customize provider shortcuts
-
-On the TV, choose **Add app** and enter the app label, Android package name, and home group. Shortcuts sharing a group appear together. Long-press a shortcut to edit or remove it. Provider shortcuts use apps installed on the device; they do not add subscriptions or bypass provider access controls.
+- Android opens direct HTTP(S) sources through another installed player. Playback depends on that player, the source format, the add-on, and your access rights. Linux mpv playback and its progress polling are not part of this Android build.
+- Device profiles, lists, themes, add-ons, and history are stored locally. Linux file-based backup and cross-computer sync are not available in the Android TV interface yet.
+- Catalogs describe and organize titles. Availability and complete coverage for every service varies by region and by the add-ons or provider catalogs available to you.
+- Test D-pad behavior, add-on compatibility, playback, and update installation on your own Android TV device. GitHub Actions builds the APK but cannot certify every TV/player combination.
 
 ## Original Linux source
 
-The source from the supplied BradFlix ZIP is preserved under [`legacy-linux/`](legacy-linux/). It is a separate Linux build and is not yet connected to the Android app. Its original README is retained there for reference.
+The supplied Linux source is preserved under [`legacy-linux/`](legacy-linux/). Its Rust/mpv desktop backend is separate from the Android TV client.
 
-## Roadmap
-
-1. Bring the catalog, add-on, profile, and playback features from Linux to Android with TV-first focus navigation.
-2. Add user-configurable groups and content catalogs, using provider APIs and add-ons the user is authorized to access.
-3. Add playback through Android Media3 with resume, subtitles, and audio track selection.
-4. Verify focus paths and installation/update flows on Android TV hardware and emulators.
-
-BradFlix is an independent project. Provider names are used only to label shortcuts, and do not imply endorsement or affiliation.
+BradFlix is an independent project. Service names and add-ons do not imply endorsement or affiliation.
