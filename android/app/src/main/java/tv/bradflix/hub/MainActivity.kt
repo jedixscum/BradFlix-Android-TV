@@ -61,7 +61,7 @@ class MainActivity : Activity() {
         providers.groupBy { it.group.ifBlank { "Streaming" } }.forEach { (group, entries) ->
             root.addView(TextView(this).apply { text = group; textSize = 20f; setTextColor(Color.WHITE); setPadding(0, 14, 0, 8) })
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-            root.addView(row)
+            root.addView(HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; isFillViewport = false; addView(row) })
             entries.forEach { provider ->
                 val button = Button(this).apply {
                     text = provider.name
