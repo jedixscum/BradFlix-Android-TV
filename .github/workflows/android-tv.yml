@@ -57,20 +57,17 @@ jobs:
       - name: Build signed release APK
         if: ${{ steps.signing.outcome == 'success' }}
         env:
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: 0.1.${{ github.run_number }}
           KEYSTORE_FILE: ${{ runner.temp }}/bradflix-release.jks
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: gradle -p android assembleRelease
+        run: gradle -p android -PbuildVersionCode=${{ github.run_number }} -PbuildVersionName=0.1.${{ github.run_number }} assembleRelease
       - name: Publish release for in-app updates
         if: ${{ steps.signing.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_NAME: 0.1.${{ github.run_number }}
         run: |
-          gh release create "v${VERSION_NAME}" android/app/build/outputs/apk/release/app-release.apk \
+          gh release create "v0.1.${{ github.run_number }}" android/app/build/outputs/apk/release/app-release.apk \
             --repo "$GITHUB_REPOSITORY" \
-            --title "BradFlix ${VERSION_NAME}" \
+            --title "BradFlix 0.1.${{ github.run_number }}" \
             --notes "Automatically built and signed by the successful Android TV workflow run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
