@@ -6,7 +6,7 @@ BradFlix is a customizable home for streaming apps on Android TV. The first Andr
 
 - Navigate with the Android TV remote's D-pad and Select button.
 - Launch streaming apps already installed on the device.
-- Add, rename, reorder by remove/re-add, or remove provider shortcuts. Long-press a shortcut to edit it.
+- Add provider shortcuts with custom names and home groups. Long-press a shortcut to edit its name, package ID, or group, or remove it.
 - Pick an accent color.
 - Check for updates when the app opens or from **Check for updates**. The app downloads a release APK only when GitHub Actions has published one, then hands installation to Android's package installer.
 - Build an APK in GitHub Actions after each push to `main` and download it from the workflow run.
@@ -32,7 +32,7 @@ Keep the keystore and passwords backed up securely. Losing the signing key preve
 
 ## Customize provider shortcuts
 
-On the TV, choose **Add app** and enter the app label and Android package name. Long-press a shortcut to edit or remove it. Provider shortcuts use apps installed on the device; they do not add subscriptions or bypass provider access controls.
+On the TV, choose **Add app** and enter the app label, Android package name, and home group. Shortcuts sharing a group appear together. Long-press a shortcut to edit or remove it. Provider shortcuts use apps installed on the device; they do not add subscriptions or bypass provider access controls.
 
 ## Original Linux source
 
