@@ -7,7 +7,7 @@ BradFlix is a customizable movie and series discovery app for Android TV. Its An
 - Browse and search movie and series catalogs through the built-in catalog provider and Stremio-compatible catalog add-ons you choose.
 - Arrange and enable catalogs on Home and Discover, create profiles and watchlists, and keep history and settings on the TV.
 - Use the Android TV remote's directional pad and Select button across the app. The TV layout has larger artwork, text, and focus highlights.
-- Open a playable HTTP(S) source through Android's video-player chooser. Install a compatible player if Android does not offer one. Add-on sources and playback are controlled by the add-on and your player.
+- Play supported HTTP(S) video sources inside BradFlix with the built-in Android Media3 player. The player provides fullscreen playback and Android TV remote controls, supports common progressive video, HLS and DASH sources, applies source request headers, and can load supported external subtitles.
 - Check for a published update when the app opens. Updates appear only after a signed APK from a successful GitHub Actions build has been selected and published using **Publish Android TV update**. Installation is confirmed by Android.
 - Build a debug APK in GitHub Actions after a push to `main`, or with **Actions → Android TV build → Run workflow**.
 
@@ -41,7 +41,7 @@ The publish workflow verifies that the selected run succeeded on `main` and incl
 
 ## Android TV limitations
 
-- Android opens direct HTTP(S) sources through another installed player. Playback depends on that player, the source format, the add-on, and your access rights. Linux mpv playback and its progress polling are not part of this Android build.
+- Built-in playback supports common direct HTTP(S) video streams; DRM-protected provider streams and sources that require a provider's official app are not unlocked. Playback also depends on the stream format, add-on, and your access rights. Linux mpv playback and its progress polling are not part of this Android build.
 - Device profiles, lists, themes, add-ons, and history are stored locally. Linux file-based backup and cross-computer sync are not available in the Android TV interface yet.
 - Catalogs describe and organize titles. Availability and complete coverage for every service varies by region and by the add-ons or provider catalogs available to you.
 - Test D-pad behavior, add-on compatibility, playback, and update installation on your own Android TV device. GitHub Actions builds the APK but cannot certify every TV/player combination.

@@ -2,7 +2,6 @@ package tv.bradflix.hub
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -21,6 +20,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class MainActivity : Activity() {
+    private val playerRequestCode = 4812
     private val prefs by lazy { getSharedPreferences("bradflix", MODE_PRIVATE) }
     private lateinit var webView: WebView
 
@@ -68,27 +68,23 @@ class MainActivity : Activity() {
             val data = runCatching { JSONObject(payload) }.getOrNull() ?: return false
             val raw = data.optString("url")
             val uri = runCatching { Uri.parse(raw) }.getOrNull() ?: return false
-            if (uri.scheme !in listOf("https", "http")) return false
-            val path = uri.path.orEmpty().lowercase()
-            val mime = when {
-                path.endsWith(".m3u8") -> "application/x-mpegURL"
-                path.endsWith(".mpd") -> "application/dash+xml"
-                path.endsWith(".mkv") -> "video/x-matroska"
-                path.endsWith(".mp4") -> "video/mp4"
-                else -> "video/*"
-            }
+            if (uri.scheme !in listOf("https", "http") || uri.host.isNullOrBlank()) return false
             runOnUiThread {
-                try {
-                    val intent = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime)
-                        .putExtra(Intent.EXTRA_TITLE, data.optString("title", "BradFlix"))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(Intent.createChooser(intent, "Choose a video player"))
-                } catch (_: ActivityNotFoundException) {
-                    Toast.makeText(this@MainActivity, "Install a compatible video player to play this source.", Toast.LENGTH_LONG).show()
-                }
+                startActivityForResult(
+                    Intent(this@MainActivity, PlayerActivity::class.java).putExtra(PlayerActivity.EXTRA_PAYLOAD, payload),
+                    playerRequestCode
+                )
             }
             return true
         }
+    }
+
+    @Deprecated("Deprecated in Android API; kept for minSdk compatibility")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != playerRequestCode || resultCode != RESULT_OK) return
+        val result = data?.getStringExtra(PlayerActivity.EXTRA_RESULT) ?: return
+        webView.evaluateJavascript("window.bradflixOnPlayerClosed && window.bradflixOnPlayerClosed(${JSONObject.quote(result)})", null)
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {

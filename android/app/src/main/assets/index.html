@@ -359,8 +359,8 @@
 //  Constants
 // =====================================================================
 
-// Android TV bridge: keep profile/catalog data on this device and hand authorized
-// HTTP(S) streams to an installed Android player. The Linux-only file/mpv APIs are not used.
+// Android TV bridge: keep profile/catalog data on this device and play HTTP(S)
+// streams in BradFlix's built-in Android TV player. Linux-only file/mpv APIs are not used.
 window.BradFlixAndroid = !!(window.BradFlixBridge && window.BradFlixBridge.play);
 if (window.BradFlixAndroid) {
   document.body.classList.add("android-tv");
@@ -787,6 +787,16 @@ function recordProgress(ctx, pos, dur, p) {
     pos, dur, at: Date.now(), watched: finishedNums(pos, dur),
   };
 }
+window.bradflixOnPlayerClosed = (raw) => {
+  try {
+    const result = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!result || !profile || profile.id !== result.profileId || !result.context) return;
+    recordProgress(result.context, Number(result.position || 0), Number(result.duration || 0), profile);
+    save();
+    if (view && view.refresh) view.refresh();
+  } catch (e) { /* keep the app usable if a player result is incomplete */ }
+};
+
 function addHistory(ctx) {
   if (ctx.noTrack) return;
   profile.history = profile.history.filter((h) => h.videoId !== ctx.videoId);
@@ -1858,10 +1868,21 @@ async function startPlayer(url, ctx, subs, headers) {
   const s = profile.settings;
   if (window.BradFlixAndroid) {
     try {
-      window.BradFlixBridge.play(JSON.stringify({url, title: ctx.title || "BradFlix", type: ctx.type || ""}));
+      const record = ctx.record || {};
+      const start = ctx.noTrack || ctx.fromStart ? 0 : (resumeAt(ctx.videoId) > 0 ? resumeAt(ctx.videoId) : (ctx.type === "series" && s.skipIntro ? Number(s.skipIntroSeconds || 0) : 0));
+      window.BradFlixBridge.play(JSON.stringify({
+        url, title: ctx.title || "BradFlix", type: ctx.type || "", start,
+        audioLanguage: s.alang || "", subtitleLanguage: s.slang || "", subtitlesOff: !!s.subsOff,
+        subtitles: subs || [], headers: (headers || []).reduce((out, line) => {
+          const split = line.indexOf(":"); if (split > 0) out[line.slice(0, split).trim()] = line.slice(split + 1).trim(); return out;
+        }, {}),
+        profileId: profile.id, noTrack: !!ctx.noTrack,
+        context: {noTrack:!!ctx.noTrack, videoId:ctx.videoId || "", type:ctx.type || "movie", title:ctx.title || "", season:ctx.season, episode:ctx.episode,
+          record:{id:record.id || ctx.videoId || "", name:record.name || ctx.title || "", poster:record.poster || "", bg:record.bg || ""}}
+      }));
       if (!ctx.noTrack) addHistory(ctx);
-      toast("Opening in your Android video player…");
-    } catch (e) { toast("No compatible Android video player could open this source.", true); }
+      toast("Playing in BradFlix…");
+    } catch (e) { toast("BradFlix could not open this source.", true); }
     return;
   }
   const body = {
