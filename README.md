@@ -1,6 +1,6 @@
 # BradFlix for Android TV
 
-BradFlix is a customizable home for streaming apps on Android TV. The first Android version gives you a remote-friendly row of provider apps, editable names and package IDs, an accent color choice, and update checks against successful signed GitHub releases.
+BradFlix is a customizable home for streaming apps on Android TV. The first Android version gives you a remote-friendly row of provider apps, editable names and package IDs, an accent color choice, and update checks against published GitHub Releases.
 
 ## What this version does
 
@@ -8,14 +8,14 @@ BradFlix is a customizable home for streaming apps on Android TV. The first Andr
 - Launch streaming apps already installed on the device.
 - Add provider shortcuts with custom names and home groups. Long-press a shortcut to edit its name, package ID, or group, or remove it.
 - Pick an accent color.
-- Check for updates when the app opens or from **Check for updates**. The app downloads a release APK only when GitHub Actions has published one, then hands installation to Android's package installer.
-- Build an APK in GitHub Actions after each push to `main` and download it from the workflow run.
+- Check for updates when the app opens or from **Check for updates**. The app downloads a release APK only after you publish it from a successful GitHub Actions build, then hands installation to Android's package installer.
+- Build debug and, when signing is configured, signed APK artifacts in GitHub Actions after each push to `main`.
 
 This is an early Android TV hub shell. It does not yet bring the Linux app's Stremio catalog browser or mpv playback to Android, nor does it include the streaming providers' licensed catalogs. Provider playback opens the provider's own installed app. Each service controls its own account, subscription, and playback.
 
 ## Build an APK
 
-Open **Actions → Android TV build → Run workflow**, or push a change to `main`. A successful run attaches `bradflix-android-tv-debug` containing a sideloadable debug APK. Debug APKs are for first install and do not use a stable signing identity across GitHub runners, so they are not the in-app update channel.
+Push a change to `main`, or open **Actions → Android TV build → Run workflow**. A successful run attaches `bradflix-android-tv-debug`, a sideloadable debug APK. Debug builds are for testing and cannot receive updates from a signed release because Android requires the same signing key for updates.
 
 ## Enable signed in-app updates
 
@@ -26,7 +26,18 @@ Android only accepts an update APK when it is signed with the same key as the in
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_PASSWORD`
 
-After those secrets are set, a successful Actions run publishes a signed APK as a GitHub Release. BradFlix checks the latest release when it opens and offers the update. Android may ask you once to allow BradFlix to install app updates; the final install is always confirmed by Android's package installer.
+Never commit the keystore or passwords. Losing the signing key prevents updates over an existing installation. If you first installed the debug APK, uninstall it before installing a signed release; uninstalling removes its app data.
+
+## Publish an update from a successful build
+
+Each successful build with the signing secrets configured uploads a `bradflix-android-tv-release` APK artifact, but does not publish it automatically. To choose which successful build becomes the update:
+
+1. Open **Actions → Android TV build** and select the successful run you want.
+2. Copy the numeric run ID from its page URL (the digits after `/runs/`).
+3. Open **Actions → Publish Android TV update → Run workflow**.
+4. Enter that run ID and start the workflow.
+
+The publishing workflow checks that the selected run succeeded on `main` and contains a signed APK, then creates a GitHub Release. BradFlix checks the latest release when it opens and offers the update. Android may ask once to allow BradFlix to install updates; the final install is confirmed by Android's package installer.
 
 Keep the keystore and passwords backed up securely. Losing the signing key prevents updates over an existing installation. Never commit the keystore or passwords to the repository.
 

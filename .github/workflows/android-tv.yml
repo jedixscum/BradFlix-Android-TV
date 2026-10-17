@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   debug-build:
@@ -29,8 +29,8 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
-  signed-release:
-    name: Publish update after a successful signed build
+  signed-apk:
+    name: Build signed update APK
     needs: debug-build
     runs-on: ubuntu-latest
     steps:
@@ -51,9 +51,9 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/bradflix-release.jks"
         if: ${{ env.KEYSTORE_BASE64 != '' && env.KEY_ALIAS != '' && env.KEYSTORE_PASSWORD != '' && env.KEY_PASSWORD != '' }}
-      - name: Skip release until signing secrets are configured
+      - name: Skip signed APK until signing secrets are configured
         if: ${{ steps.signing.outcome == 'skipped' }}
-        run: echo 'Debug APK built and uploaded. Add all four Android signing secrets to publish in-app updates.'
+        run: echo 'Debug APK built and uploaded. Add all four Android signing secrets to create an update APK artifact.'
       - name: Build signed release APK
         if: ${{ steps.signing.outcome == 'success' }}
         env:
@@ -62,12 +62,10 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle -p android -PbuildVersionCode=${{ github.run_number }} -PbuildVersionName=0.1.${{ github.run_number }} assembleRelease
-      - name: Publish release for in-app updates
+      - name: Upload signed APK for manual publishing
         if: ${{ steps.signing.outcome == 'success' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "v0.1.${{ github.run_number }}" android/app/build/outputs/apk/release/app-release.apk \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "BradFlix 0.1.${{ github.run_number }}" \
-            --notes "Automatically built and signed by the successful Android TV workflow run ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+        uses: actions/upload-artifact@v4
+        with:
+          name: bradflix-android-tv-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
