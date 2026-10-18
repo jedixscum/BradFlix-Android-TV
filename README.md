@@ -6,7 +6,8 @@ BradFlix is a customizable movie and series discovery app for Android TV. Its An
 
 - Browse and search movie and series catalogs through the built-in catalog provider and Stremio-compatible catalog add-ons you choose.
 - Arrange and enable catalogs on Home and Discover, create profiles and watchlists, and keep history and settings on the TV.
-- Use the Android TV remote's directional pad and Select button across the app. The TV layout has larger artwork, text, and focus highlights.
+- Use the Android TV remote's directional pad and Select button across the app. The side navigation scrolls when needed so every section stays reachable, and focus highlights make the current target clear.
+- Continue watching from saved progress. BradFlix records position and duration when you leave the built-in player and offers that point as the next resume position.
 - Play supported HTTP(S) video sources inside BradFlix with the built-in Android Media3 player. The player provides fullscreen playback and Android TV remote controls, supports common progressive video, HLS and DASH sources, applies source request headers, and can load supported external subtitles.
 - Check for a published update when the app opens. Updates appear only after a signed APK from a successful GitHub Actions build has been selected and published using **Publish Android TV update**. Installation is confirmed by Android.
 - Build a debug APK in GitHub Actions after a push to `main`, or with **Actions → Android TV build → Run workflow**.

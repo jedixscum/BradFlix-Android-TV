@@ -26,6 +26,7 @@ class PlayerActivity : Activity() {
     private var playerView: PlayerView? = null
     private var payload: JSONObject? = null
     private var resultSent = false
+    private var errorDialog: android.app.AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,8 +89,7 @@ class PlayerActivity : Activity() {
             }
 
             override fun onPlayerError(error: PlaybackException) {
-                Toast.makeText(this@PlayerActivity, "Could not play this source: ${error.errorCodeName}", Toast.LENGTH_LONG).show()
-                finishWithProgress()
+                showPlaybackError(error)
             }
         })
         exo.setMediaItem(makeMediaItem(uri, data))
@@ -97,6 +97,32 @@ class PlayerActivity : Activity() {
         if (startSeconds > 0) exo.seekTo((startSeconds * 1000).toLong())
         exo.prepare()
         exo.playWhenReady = true
+    }
+
+    private fun showPlaybackError(error: PlaybackException) {
+        if (isFinishing || errorDialog?.isShowing == true) return
+        errorDialog = android.app.AlertDialog.Builder(this)
+            .setTitle("This source could not play")
+            .setMessage("Check your connection or choose another source. (${error.errorCodeName})")
+            .setPositiveButton("Try again") { _, _ ->
+                player?.let { exo ->
+                    val position = exo.currentPosition.coerceAtLeast(0)
+                    exo.seekTo(position)
+                    exo.prepare()
+                    exo.playWhenReady = true
+                }
+                errorDialog = null
+            }
+            .setNegativeButton("Choose another source") { _, _ ->
+                errorDialog = null
+                finishWithProgress()
+            }
+            .setOnCancelListener {
+                errorDialog = null
+                finishWithProgress()
+            }
+            .create()
+        errorDialog?.show()
     }
 
     private fun applyTrackPreferences(exo: ExoPlayer, data: JSONObject) {
