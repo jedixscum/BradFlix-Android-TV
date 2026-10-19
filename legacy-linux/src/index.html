@@ -263,6 +263,18 @@
   .lock { font-size: 13px; color: var(--muted); }
   .center { text-align: center; }
   .splash { font-size: 44px; font-weight: 900; letter-spacing: -0.04em; margin: 40px 0 0; background: linear-gradient(90deg, var(--text), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .intro { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow: hidden; background: #050506; transition: opacity .55s ease, visibility .55s ease; }
+  .intro.done { opacity: 0; visibility: hidden; pointer-events: none; }
+  .intro::before { content: ""; position: absolute; width: min(70vw, 760px); height: min(70vw, 760px); border-radius: 50%; background: #e50914; filter: blur(100px); opacity: .18; animation: introGlow 2.8s ease both; }
+  .intro-name { position: relative; color: #e50914; font: 950 clamp(48px, 12vw, 148px)/1 Impact, "Arial Narrow", sans-serif; letter-spacing: -.065em; transform: scaleX(.94); text-shadow: 0 6px 38px #e5091455; animation: introReveal 2.65s cubic-bezier(.2,.7,.2,1) both; }
+  .intro-name::first-letter { letter-spacing: -.09em; }
+  .intro-hint { position: absolute; bottom: 7vh; color: #a5a5a5; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; animation: hintFade 2.8s both; }
+  @keyframes introReveal { 0% { opacity: 0; transform: scaleX(.94) scale(.82); filter: blur(18px); letter-spacing: .18em; } 38% { opacity: 1; filter: blur(0); } 70% { transform: scaleX(.94) scale(1.04); letter-spacing: -.065em; } 100% { transform: scaleX(.94) scale(1); } }
+  @keyframes introGlow { 0% { transform: scale(.35); opacity: 0; } 40% { opacity: .28; } 100% { transform: scale(1.2); opacity: 0; } }
+  @keyframes hintFade { 0%, 72% { opacity: 0; } 100% { opacity: .8; } }
+  .catalog-group { margin: 12px 0 26px; padding: 18px 18px 2px; border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(135deg, color-mix(in srgb, var(--panel) 92%, var(--accent) 8%), var(--panel)); }
+  .catalog-group > h2 { display: flex; justify-content: space-between; align-items: center; }
+  .group-count { color: var(--muted); font-size: 12px; font-weight: 600; }
 
   .form { max-width: 760px; }
   .field { margin: 0 0 18px; }
@@ -314,6 +326,7 @@
 </style>
 </head>
 <body class="locked" data-layout="sidebar" data-cards="round">
+<div class="intro" id="intro" role="status" aria-label="BradFlix starting"><div class="intro-name">BradFlix</div><div class="intro-hint">Press any key to skip</div></div>
 <aside id="side">
   <div class="brand">BradFlix</div>
   <nav id="nav">
@@ -467,7 +480,7 @@ let state = null;     // everything that is saved
 let profile = null;   // the profile currently watching
 
 function defaultSettings() {
-  return { alang: "eng", slang: "eng", subsOff: false, autoplayFirst: false, autoplayNext: true, metaAddon: "", bestStream: true, minQuality: "any", maxQuality: "2160", skipIntro: false, skipIntroSeconds: 90 };
+  return { alang: "eng", slang: "eng", subsOff: false, autoplayFirst: false, autoplayNext: true, metaAddon: "", bestStream: true, minQuality: "any", maxQuality: "2160", skipIntro: false, skipIntroSeconds: 90, streamRules: "" };
 }
 function fixProfile(p) {
   p.addons = p.addons || [];
@@ -475,6 +488,7 @@ function fixProfile(p) {
   p.catalogs.order = p.catalogs.order || [];
   p.catalogs.home = p.catalogs.home || {};
   p.catalogs.discover = p.catalogs.discover || {};
+  p.catalogGroups = Array.isArray(p.catalogGroups) ? p.catalogGroups.filter((g) => g && typeof g.name === "string" && Array.isArray(g.catalogs)) : [];
   p.watchlists = p.watchlists || [];
   p.history = p.history || [];
   p.progress = p.progress || {};
@@ -967,8 +981,22 @@ async function showHome() {
   if (cw.length) addRow("Continue watching", { items: cw, variant: "wide" });
 
   const cats = visibleCatalogs("home");
+  const groupedKeys = new Set();
+  for (const group of profile.catalogGroups || []) {
+    const groupCats = group.catalogs.map((key) => cats.find((cat) => cat.key === key)).filter(Boolean);
+    if (!groupCats.length) continue;
+    const section = document.createElement("section"); section.className = "catalog-group";
+    section.innerHTML = `<h2>${esc(group.name)} <span class="group-count">${groupCats.length} catalog${groupCats.length === 1 ? "" : "s"}</span></h2>`;
+    app.appendChild(section);
+    for (const c of groupCats) {
+      groupedKeys.add(c.key);
+      const builtin = c.key.startsWith("builtin|");
+      addRow(builtin ? `Top 10 ${c.type === "movie" ? "movies" : "series"} today` : c.title,
+        { cat: c, variant: builtin ? "top10" : undefined, limit: builtin ? 10 : 0, lazy: true, into: section });
+    }
+  }
   let first = true;
-  for (const c of cats) {
+  for (const c of cats.filter((cat) => !groupedKeys.has(cat.key))) {
     const builtin = c.key.startsWith("builtin|");
     addRow(builtin ? `Top 10 ${c.type === "movie" ? "movies" : "series"} today` : c.title,
       { cat: c, variant: builtin ? "top10" : undefined, limit: builtin ? 10 : 0, lazy: !first });
@@ -1670,6 +1698,13 @@ function isPlayable(s) { return !!s && (isWeb(s.url) || !!s.ytId); }
 function streamScore(stream, addon, addonIndex) {
   const settings = profile.settings || {};
   const label = `${stream.name || ""} ${stream.title || ""} ${stream.description || ""}`.toLowerCase();
+  const rules = String(settings.streamRules || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  for (const raw of rules) {
+    const mode = raw[0] === "+" || raw[0] === "-" ? raw[0] : "+";
+    const pattern = raw[0] === "+" || raw[0] === "-" ? raw.slice(1).trim() : raw;
+    if (!pattern) continue;
+    try { if (new RegExp(pattern, "i").test(label) && mode === "-") return -200000; } catch (e) { /* invalid patterns are ignored */ }
+  }
   const q = label.match(/(?:2160p|4k|uhd|1080p|720p|480p|360p)/g) || [];
   const quality = q.some(x => /2160|4k|uhd/.test(x)) ? 2160 : q.some(x => /1080/.test(x)) ? 1080 : q.some(x => /720/.test(x)) ? 720 : q.some(x => /480/.test(x)) ? 480 : q.some(x => /360/.test(x)) ? 360 : 0;
   const max = Number(settings.maxQuality || 2160), min = settings.minQuality === "any" ? 0 : Number(settings.minQuality || 0);
@@ -1683,6 +1718,12 @@ function streamScore(stream, addon, addonIndex) {
   if (/hdr|dolby vision|\bdv\b/.test(label)) score += 10;
   if (/cam|telesync|hdcam|workprint/.test(label)) score -= 1000;
   if (/torrent|magnet:|\.torrent\b/.test(label) && !isWeb(stream.url)) score -= 10000;
+  for (const raw of rules) {
+    const mode = raw[0] === "+" || raw[0] === "-" ? raw[0] : "+";
+    const pattern = raw[0] === "+" || raw[0] === "-" ? raw.slice(1).trim() : raw;
+    if (!pattern || mode !== "+") continue;
+    try { if (new RegExp(pattern, "i").test(label)) score += 500; } catch (e) { /* invalid patterns are ignored */ }
+  }
   return score;
 }
 function runStreams(type, id, onAddon) {
@@ -1694,7 +1735,7 @@ function runStreams(type, id, onAddon) {
     const check = () => {
       if (remaining > 0 || settled) return;
       const candidates = [];
-      results.forEach((list, i) => (list || []).forEach(stream => { if (isPlayable(stream)) candidates.push({stream, addon:addons[i], score:streamScore(stream, addons[i], i)}); }));
+      results.forEach((list, i) => (list || []).forEach(stream => { if (isPlayable(stream)) { const score = streamScore(stream, addons[i], i); if (score > -100000) candidates.push({stream, addon:addons[i], score}); } }));
       candidates.sort((a,b) => b.score - a.score);
       settled = true;
       resolve(candidates.length ? {stream:candidates[0].stream, addon:candidates[0].addon} : null);
@@ -2169,6 +2210,7 @@ function settingsPlayback(box) {
     <div class="field"><label class="t" for="maxq">Maximum preferred quality</label><select id="maxq"><option value="720" ${String(s.maxQuality||2160)==="720"?"selected":""}>720p</option><option value="1080" ${String(s.maxQuality||2160)==="1080"?"selected":""}>1080p</option><option value="2160" ${String(s.maxQuality||2160)==="2160"?"selected":""}>4K / 2160p</option></select></div>
     <div class="check"><input type="checkbox" id="skipintro" ${s.skipIntro ? "checked" : ""}><label for="skipintro"><b>Skip opening segment on episodes</b><br><span class="muted">Uses a fixed skip duration because most add-ons do not provide intro timestamps.</span></label></div>
     <div class="field"><label class="t" for="skipsecs">Opening segment duration (seconds)</label><input id="skipsecs" type="number" min="0" max="600" value="${Math.max(0,Math.min(600,Number(s.skipIntroSeconds)||90))}"><div class="hint">Only used when starting a series episode from the beginning. Resume progress takes priority.</div></div>
+    <div class="field"><label class="t" for="streamrules">Custom stream match rules</label><textarea id="streamrules" placeholder="+\bremux\b&#10;-\bcam\b">${esc(s.streamRules || "")}</textarea><div class="hint">One regular expression per line. Prefix with <code>+</code> to strongly prefer a match, or <code>-</code> to keep it out of automatic playback. Unprefixed patterns are treated as <code>+</code>. Manual source selection still shows every source. Invalid patterns are ignored.</div></div>
     <div class="field"><label class="t" for="metaa">Metadata provider</label>
       <select id="metaa"><option value="">Built-in (Cinemeta)</option>${metaAddons.map((a) =>
         `<option value="${esc(addonBase(a.url))}" ${addonBase(a.url) === s.metaAddon ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select>
@@ -2185,6 +2227,7 @@ function settingsPlayback(box) {
   $("#maxq").onchange = (e) => set("maxQuality", e.target.value);
   $("#skipintro").onchange = (e) => set("skipIntro", e.target.checked);
   $("#skipsecs").onchange = (e) => set("skipIntroSeconds", Math.max(0, Math.min(600, Number(e.target.value)||0)));
+  $("#streamrules").onchange = (e) => set("streamRules", e.target.value);
   $("#metaa").onchange = (e) => { set("metaAddon", e.target.value); metaCache.clear(); };
   $("#switch").onclick = () => showProfiles(true);
 }
@@ -2230,8 +2273,9 @@ function settingsAddons(box) {
 }
 
 function settingsCatalogs(box) {
-  box.innerHTML = `<p class="muted">Choose what appears on Home and Discover, and in what order.</p>
-    <div class="list" id="cl"></div>`;
+  box.innerHTML = `<p class="muted">Choose what appears on Home and Discover, reorder catalogs, and organize Home into custom sections.</p>
+    <div class="list" id="cl"></div><h3>Home sections</h3><p class="muted">Create named rows to group related catalogs, for example “My favorites” or “Animation.”</p>
+    <div class="inline"><input id="groupname" type="text" maxlength="48" placeholder="Section name"><button class="btn" id="groupadd">Create section</button></div><div class="list" id="grouplist" style="margin-top:14px"></div>`;
   const draw = () => {
     const cats = allCatalogs();
     $("#cl").innerHTML = cats.map((c, i) => `
@@ -2251,7 +2295,21 @@ function settingsCatalogs(box) {
     };
     $("#cl").querySelectorAll("[data-up]").forEach((b) => { b.onclick = () => move(Number(b.dataset.up), -1); });
     $("#cl").querySelectorAll("[data-dn]").forEach((b) => { b.onclick = () => move(Number(b.dataset.dn), 1); });
+    const groups = profile.catalogGroups || [];
+    $("#grouplist").innerHTML = groups.length ? groups.map((g, i) => `
+      <div class="item" style="align-items:flex-start"><div class="grow"><label class="t" for="gn${i}">Section name</label><input id="gn${i}" type="text" maxlength="48" value="${esc(g.name)}"><div class="small" style="margin:8px 0">Choose catalogs in this section</div>
+      <div class="inline">${cats.map((c) => `<label class="tag"><input type="checkbox" data-gcat="${i}" value="${esc(c.key)}" ${(g.catalogs || []).includes(c.key) ? "checked" : ""}> ${esc(c.title)}</label>`).join("")}</div></div>
+      <button class="btn quiet small" data-gup="${i}" aria-label="Move section up" ${i === 0 ? "disabled" : ""}>↑</button><button class="btn quiet small" data-gdn="${i}" aria-label="Move section down" ${i === groups.length - 1 ? "disabled" : ""}>↓</button><button class="btn danger small" data-grm="${i}">Remove</button></div>`).join("") : `<p class="muted">No custom Home sections yet.</p>`;
+    groups.forEach((g, i) => {
+      const name = $(`#gn${i}`); name.onchange = () => { g.name = name.value.trim() || "My section"; save(); };
+      Array.from(document.querySelectorAll("[data-gcat]")).filter((el) => Number(el.dataset.gcat) === i).forEach((c) => { c.onchange = () => { g.catalogs = Array.from(document.querySelectorAll("[data-gcat]")).filter((el) => Number(el.dataset.gcat) === i && el.checked).map((el) => el.value); save(); }; });
+    });
+    const moveGroup = (i, d) => { const j = i + d; [groups[i], groups[j]] = [groups[j], groups[i]]; save(); draw(); };
+    $("#grouplist").querySelectorAll("[data-gup]").forEach((b) => b.onclick = () => moveGroup(Number(b.dataset.gup), -1));
+    $("#grouplist").querySelectorAll("[data-gdn]").forEach((b) => b.onclick = () => moveGroup(Number(b.dataset.gdn), 1));
+    $("#grouplist").querySelectorAll("[data-grm]").forEach((b) => b.onclick = () => { groups.splice(Number(b.dataset.grm), 1); profile.catalogGroups = groups; save(); draw(); });
   };
+  $("#groupadd").onclick = () => { const name = $("#groupname").value.trim(); if (!name) { toast("Enter a section name first.", true); return; } profile.catalogGroups.push({ name, catalogs: [] }); save(); draw(); };
   draw();
 }
 
@@ -2328,6 +2386,11 @@ function showAddons() {
 //  Start
 // =====================================================================
 async function boot() {
+  const intro = $("#intro");
+  let introTimer = setTimeout(() => intro && intro.classList.add("done"), 3000);
+  const skipIntro = () => { if (!intro || intro.classList.contains("done")) return; clearTimeout(introTimer); intro.classList.add("done"); document.removeEventListener("keydown", skipIntro); intro.removeEventListener("click", skipIntro); };
+  document.addEventListener("keydown", skipIntro, { once: true });
+  intro && intro.addEventListener("click", skipIntro, { once: true });
   document.querySelectorAll("#nav button").forEach((b) => { b.onclick = () => { if (profile) tab(b.dataset.go); }; });
   $("#chip").onclick = () => showProfiles(false);
   await loadState();
