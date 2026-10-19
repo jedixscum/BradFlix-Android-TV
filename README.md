@@ -1,6 +1,6 @@
-# BradFlix for Android TV
+# BradFlix for Android TV and Android
 
-BradFlix is a customizable movie and series discovery app for Android TV. Its Android interface is based on the catalog browser included in the supplied BradFlix source, with profiles, configurable catalogs, search, watchlists, add-ons, themes, and TV remote navigation.
+BradFlix is a customizable movie and series discovery app for Android TV, phones, and tablets. It keeps the TV remote interface on television devices and uses a touch-friendly, labeled bottom navigation bar on smaller touch screens. Its Android interface is based on the catalog browser included in the supplied BradFlix source, with profiles, configurable catalogs, search, watchlists, add-ons, themes, and TV remote navigation.
 
 ## What BradFlix does
 
@@ -11,7 +11,7 @@ BradFlix is a customizable movie and series discovery app for Android TV. Its An
 - Add custom stream matching rules to prefer or skip sources during Auto-play.
 - Play supported HTTP(S) video sources inside BradFlix with the built-in Android Media3 player. The player provides fullscreen playback and Android TV remote controls, supports common progressive video, HLS and DASH sources, applies source request headers, and can load supported external subtitles.
 - Check for a published update when the app opens. Updates appear only after a signed APK from a successful GitHub Actions build has been selected and published using **Publish Android TV update**. Installation is confirmed by Android.
-- Build a debug APK in GitHub Actions after a push to `main`, or with **Actions → Android TV build → Run workflow**.
+- Build one installable Android APK for TV, phones, and tablets in GitHub Actions after a push to `main`, or with **Actions → Android TV build → Run workflow**.
 
 BradFlix is a discovery and playback client. It does not include every streaming service's licensed catalog or subscription, and it cannot unlock paid services. Catalog coverage depends on the metadata catalogs and add-ons you install. For a provider's licensed video, use that provider's official app and account.
 
@@ -41,7 +41,7 @@ The build workflow uploads a signed APK artifact when all four signing secrets a
 
 The publish workflow verifies that the selected run succeeded on `main` and includes a signed APK before creating the public GitHub Release. BradFlix checks the latest published release when it opens and prompts to install a newer version. Android may ask once to allow BradFlix to install updates; the Android package installer then confirms the installation.
 
-## Android TV limitations
+## Android limitations
 
 - Built-in playback supports common direct HTTP(S) video streams; DRM-protected provider streams and sources that require a provider's official app are not unlocked. Playback also depends on the stream format, add-on, and your access rights. Linux mpv playback and its progress polling are not part of this Android build.
 - Device profiles, lists, themes, add-ons, and history are stored locally. Linux file-based backup and cross-computer sync are not available in the Android TV interface yet.
