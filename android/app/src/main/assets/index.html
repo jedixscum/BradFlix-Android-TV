@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BradFlix</title>
+<title>BradsHub</title>
 <style>
   :root {
     --bg: #0d0f13;
@@ -76,7 +76,7 @@
   @keyframes intro-wordmark { 0%{opacity:0;filter:blur(18px);transform:scale(.9);letter-spacing:.12em} 48%{opacity:1;filter:blur(0);transform:scale(1.02);letter-spacing:-.055em} 72%,100%{opacity:1;filter:blur(0);transform:scale(1)} }
   @media (prefers-reduced-motion:reduce) { .brand-intro::before,.brand-intro::after,.brand-intro-mark { animation-duration:.75s; } }
   .brand::first-letter { letter-spacing: -.09em; }
-  /* Keep the BradFlix wordmark branded even when a Harbor theme is imported. */
+  /* Keep the BradsHub wordmark branded even when a Harbor theme is imported. */
   #side .brand { color: #e50914 !important; font-weight: 950 !important; }
   body[data-layout="rail"] .brand { font-size: 15px; letter-spacing: -.07em; }
   #nav button[data-go="calendar"] { color: var(--muted); }
@@ -216,7 +216,7 @@
     background: var(--panel); border: 1px solid var(--line);
   }
   textarea { width: 100%; min-height: 120px; font-family: "DejaVu Sans Mono", monospace; font-size: 13px; }
-  /* Keep native dropdown controls aligned with the active BradFlix theme.
+  /* Keep native dropdown controls aligned with the active BradsHub theme.
      WebKit on Linux can otherwise draw the closed select and its popup with
      the system's white/light control palette, regardless of the page theme. */
   select {
@@ -453,11 +453,23 @@
     .btns { gap: 8px; }
   }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+.quality-group { margin:14px 0; }
+  .quality-group h4 { position:sticky; top:0; z-index:1; padding:8px 4px; margin:0; background:var(--panel); color:var(--accent); }
+  .quality-list { display:grid; gap:8px; }
+  .dialog .stream-groups { max-height:58vh; overflow:auto; overscroll-behavior:contain; }
+  .player-actions label { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:14px; }
+  .player-actions select { max-width:220px; min-width:120px; padding:7px 10px; }
+.brand { display:flex; align-items:center; width:max-content; gap:0; color:#fff !important; background:#050505; padding:4px 7px; border-radius:4px; letter-spacing:-.055em; }
+  .brand-main { color:#fff; }
+  .brand-badge, .intro-name b { color:#111; background:#f90; padding:0 .12em; border-radius:2px; }
+  .intro-name span, .brand-intro-mark span { color:#fff; }
+  .brand-intro-mark b { color:#111; background:#f90; padding:0 .12em; border-radius:2px; }
+  .intro-name { display:flex; align-items:center; gap:.05em; }
 </style>
 </head>
 <body class="locked" data-layout="sidebar" data-cards="round">
 <aside id="side">
-  <div class="brand">BradFlix</div>
+  <div class="brand"><span class="brand-main">Brads</span><span class="brand-badge">Hub</span></div>
   <nav id="nav" aria-label="Main navigation">
     <button data-go="home" aria-label="Home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span class="lbl">Home</span></button>
     <button data-go="discover" aria-label="Discover"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span class="lbl">Discover</span></button>
@@ -474,11 +486,11 @@
   <button id="chip" title="Switch profile"></button>
 </aside>
 <main id="app"></main>
-<div id="brand-intro" class="brand-intro" aria-hidden="true"><div class="brand-intro-mark">BradFlix</div></div>
+<div id="brand-intro" class="brand-intro" aria-hidden="true"><div class="brand-intro-mark"><span>Brads</span><b>Hub</b></div></div>
 
 <script>
 "use strict";
-function startBradFlixIntro() {
+function startBradsHubIntro() {
   const intro = document.getElementById("brand-intro");
   if (!intro) return;
   let finished = false;
@@ -507,13 +519,13 @@ function startBradFlixIntro() {
 // =====================================================================
 
 // Android TV bridge: keep profile/catalog data on this device and play HTTP(S)
-// streams in BradFlix's built-in Android TV player. Linux-only file/mpv APIs are not used.
+// streams in BradsHub's built-in Android TV player. Linux-only file/mpv APIs are not used.
 window.BradFlixAndroid = !!(window.BradFlixBridge && window.BradFlixBridge.play);
-window.BradFlixTelevision = window.BradFlixAndroid && !!window.BradFlixBridge.isTelevision();
+window.BradsHubTelevision = window.BradFlixAndroid && !!window.BradFlixBridge.isTelevision();
 if (window.BradFlixAndroid) {
-  document.body.classList.add(window.BradFlixTelevision ? "android-tv" : "android-touch");
-  if (window.BradFlixTelevision) startBradFlixIntro();
-  startBradFlixIntro();
+  document.body.classList.add(window.BradsHubTelevision ? "android-tv" : "android-touch");
+  if (window.BradsHubTelevision) startBradsHubIntro();
+  startBradsHubIntro();
   window.bradflixHandleBack = () => {
     const overlay = document.querySelector(".overlay");
     if (overlay) {
@@ -527,7 +539,7 @@ if (window.BradFlixAndroid) {
     event.target.scrollIntoView({block:"nearest", behavior:"smooth"});
   });
   document.addEventListener("keydown", (event) => {
-    if (!window.BradFlixTelevision) return;
+    if (!window.BradsHubTelevision) return;
     const directions = {ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1]};
     const direction = directions[event.key];
     if (!direction) return;
@@ -952,6 +964,11 @@ window.bradflixOnPlayerClosed = (raw) => {
     recordProgress(result.context, Number(result.position || 0), Number(result.duration || 0), profile);
     save();
     if (view && view.refresh) view.refresh();
+    const playback = activePlaybackCtx;
+    activePlaybackCtx = null;
+    const pos = Number(result.position || 0), dur = Number(result.duration || 0);
+    const next = playback && playback.episodes ? nextEpisode(playback.episodes, playback.videoId) : null;
+    if (next && playback.autoEligible && profile.settings.autoplayNext && finishedNums(pos, dur)) countdownNext(playback, next);
   } catch (e) { /* keep the app usable if a player result is incomplete */ }
 };
 
@@ -1347,7 +1364,7 @@ function updateChip() {
 
 function showProfiles(manage) {
   profile = null; view = null; stack = []; updateChip(); setNav("");
-  app.innerHTML = `<div class="center"><div class="splash">BradFlix</div><h2 style="font-size:26px;margin-top:14px">${manage ? "Manage profiles" : "Who’s watching?"}</h2>
+  app.innerHTML = `<div class="center"><div class="splash">BradsHub</div><h2 style="font-size:26px;margin-top:14px">${manage ? "Manage profiles" : "Who’s watching?"}</h2>
     <div class="profiles">${state.profiles.map((p, i) => `
       <button class="pbtn" data-i="${i}">${avatarHTML(p, 110)}<div class="pname">${esc(p.name)}</div>
       ${p.pin ? '<div class="lock">PIN protected</div>' : ""}</button>`).join("")}
@@ -1926,7 +1943,7 @@ async function showDetail(type, id, hint, opts) {
     $("#eplist").querySelectorAll("[data-p]").forEach((b) => {
       b.onclick = () => {
         const e = eps[Number(b.dataset.p)];
-        openStreams(mkCtx(e.id, `${meta.name} ${epLabel(e)}`, { season: e.season, episode: e.episode }), profile.settings.autoplayFirst);
+        openStreams(mkCtx(e.id, `${meta.name} ${epLabel(e)}`, { season: e.season, episode: e.episode }), profile.settings.autoplayFirst, true);
       };
     });
     $("#eplist").querySelectorAll("[data-w]").forEach((b) => {
@@ -2063,65 +2080,150 @@ function runStreams(type, id, onAddon) {
 }
 
 let streamToken = 0;
-async function openStreams(ctx, auto) {
-  const box = $("#streams");
-  if (!box) return;
-  const token = ++streamToken;
-  box.innerHTML = `<h3>${esc(ctx.title)}</h3>`;
-  const session = runStreams(ctx.type, ctx.videoId, (addon, list) => {
-    if (auto || token !== streamToken) return;
-    const panel = $("#streamlist");
-    if (!panel) return;
-    if (!list.length) return;
-    panel.insertAdjacentHTML("beforeend", `<div class="group">${esc(addon.name)}</div>`);
-    list.forEach((s) => panel.appendChild(streamRow(s, addon, ctx)));
-  });
-  if (!session.addons.length) {
-    box.innerHTML += `<div class="note">You have no add-ons that provide video links yet.
-      Open <b>Add-ons</b> in the menu and paste the link of an add-on you trust.</div>`;
-    return;
+const MAX_AUTOPLAY_BYTES = 10 * 1024 * 1024 * 1024;
+function streamSizeBytes(stream) {
+  const values = [stream && stream.behaviorHints && stream.behaviorHints.videoSize, stream && stream.fileSize, stream && stream.videoSize, stream && stream.size];
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
+    if (typeof value === "string") {
+      const match = value.trim().match(/^([\d.]+)\s*(B|KB|MB|GB|TB)?$/i);
+      if (match) {
+        const amount = Number(match[1]), unit = (match[2] || "B").toUpperCase();
+        const factor = {B:1,KB:1024,MB:1024**2,GB:1024**3,TB:1024**4}[unit];
+        if (Number.isFinite(amount) && factor) return amount * factor;
+      }
+    }
   }
-  box.innerHTML += `<div class="list" id="streamlist"></div><p class="muted" id="sstatus">${auto ? "Finding the best source…" : `Asking ${session.addons.length} add-on(s)…`}</p>`;
-  const result = await session.first;
-  if (token !== streamToken) return;
-  const status = $("#sstatus");
-  if (!result) { if (status) status.textContent = "No playable video links were found. Try a different add-on."; return; }
-  if (auto) { if (status) status.textContent = ""; playStream(result.stream, result.addon, ctx); }
-  else if (status) status.textContent = "";
+  const text = `${stream && stream.name || ""} ${stream && stream.title || ""} ${stream && stream.description || ""}`;
+  const match = text.match(/\b([\d.]+)\s*(TB|GB|MB)\b/i);
+  if (match) return Number(match[1]) * ({MB:1024**2,GB:1024**3,TB:1024**4}[match[2].toUpperCase()]);
+  return null;
 }
-
-function streamRow(s, addon, ctx) {
+function streamQuality(stream) {
+  const label = `${stream.name || ""} ${stream.title || ""} ${stream.description || ""}`;
+  const found = label.match(/2160p|4k|uhd|1080p|720p|480p|360p/i);
+  if (!found) return "Other / unknown quality";
+  const q = found[0].toLowerCase();
+  return /2160|4k|uhd/.test(q) ? "4K / 2160p" : /1080/.test(q) ? "1080p" : /720/.test(q) ? "720p" : "SD";
+}
+function bestKnownSmall(records) {
+  return records.filter((r) => {
+    const size = streamSizeBytes(r.stream);
+    return size != null && size <= MAX_AUTOPLAY_BYTES && isPlayable(r.stream);
+  }).sort((a,b) => streamScore(b.stream,b.addon,b.addonIndex)-streamScore(a.stream,a.addon,a.addonIndex))[0] || null;
+}
+let streamToken = 0;
+async function openStreams(ctx, auto, showPopup) {
+  const token = ++streamToken;
+  const box = $("#streams");
+  const setup = (panel, close) => {
+    let records = [], scraping = 0;
+    panel.innerHTML = `<h3>${esc(ctx.title)}</h3>
+      <p class="muted" id="streamStatus">Finding sources…</p>
+      <div class="btns"><button class="btn quiet small" id="rescrape">Rescrape</button><button class="btn quiet small" id="streamClose">Close</button></div>
+      <div class="stream-groups" id="streamGroups"></div>`;
+    panel.querySelector("#streamClose").onclick = () => close(null);
+    const render = () => {
+      const groups = new Map();
+      records.forEach((r) => {
+        const quality = streamQuality(r.stream);
+        if (!groups.has(quality)) groups.set(quality, []);
+        groups.get(quality).push(r);
+      });
+      const order = ["4K / 2160p","1080p","720p","SD","Other / unknown quality"];
+      const container = panel.querySelector("#streamGroups");
+      container.innerHTML = "";
+      order.forEach((quality) => {
+        const items = groups.get(quality) || [];
+        if (!items.length) return;
+        const section = document.createElement("section");
+        section.className = "quality-group";
+        section.innerHTML = `<h4>${esc(quality)}</h4><div class="quality-list"></div>`;
+        const list = section.querySelector(".quality-list");
+        items.forEach((r) => list.appendChild(streamRow(r.stream, r.addon, ctx, () => close(null))));
+        container.appendChild(section);
+      });
+    };
+    const scrape = () => {
+      const current = ++streamToken;
+      records = [];
+      panel.querySelector("#streamGroups").innerHTML = "";
+      panel.querySelector("#streamStatus").textContent = "Rescraping add-ons for sources…";
+      const session = runStreams(ctx.type, ctx.videoId, (addon, list) => {
+        if (current !== streamToken || !panel.isConnected) return;
+        const addonIndex = session.addons.indexOf(addon);
+        list.forEach((stream) => records.push({stream,addon,addonIndex}));
+        render();
+      });
+      scraping = current;
+      if (!session.addons.length) {
+        panel.querySelector("#streamStatus").textContent = "No stream add-ons are installed for this title.";
+        return;
+      }
+      panel.querySelector("#streamStatus").textContent = `Searching ${session.addons.length} add-on(s)…`;
+      session.first.then((result) => {
+        if (current !== streamToken || !panel.isConnected) return;
+        const status = panel.querySelector("#streamStatus");
+        if (!records.some((r) => isPlayable(r.stream))) status.textContent = "No playable links found. Try rescraping or check your add-ons.";
+        else status.textContent = `${records.filter((r) => isPlayable(r.stream)).length} links found. Choose a quality category.`;
+        if (auto) {
+          const eligible = bestKnownSmall(records);
+          if (eligible) {
+            close(null);
+            playStream(eligible.stream, eligible.addon, ctx);
+          } else {
+            status.textContent += " Automatic playback needs a reported file size of 10 GB or less; choose a link to play manually.";
+          }
+        }
+      });
+    };
+    panel.querySelector("#rescrape").onclick = scrape;
+    scrape();
+  };
+  if (showPopup || !box) return modal((panel, close) => setup(panel, close));
+  return modal((panel, close) => setup(panel, close));
+}
+function streamRow(s, addon, ctx, closePicker) {
   let url = s.url;
   if (!url && s.ytId) url = "https://www.youtube.com/watch?v=" + s.ytId;
   const label = (s.name || addon.name || "Stream").replace(/\s+/g, " ");
   const detail = s.title || s.description || "";
   const playable = isPlayable(s);
+  const size = streamSizeBytes(s);
+  const sizeLabel = size == null ? "Size unknown" : size <= MAX_AUTOPLAY_BYTES ? `${(size / 1024**3).toFixed(1)} GB` : `${(size / 1024**3).toFixed(1)} GB · over auto-play limit`;
   const el = document.createElement(playable ? "button" : "div");
   el.className = "item" + (playable ? "" : " off");
-  el.innerHTML = `<div class="grow"><div>${esc(label)}</div><div class="small">${esc(detail)}</div></div>
-    <span class="tag">${playable ? "" : "Torrent only, not supported"}</span>`;
-  if (playable) el.onclick = () => playStream(s, addon, ctx);
+  el.innerHTML = `<div class="grow"><div>${esc(label)}</div><div class="small">${esc(detail)} · ${esc(addon.name || "Add-on")} · ${esc(sizeLabel)}</div></div>
+    <span class="tag">${playable ? esc(streamQuality(s)) : "Torrent only, not supported"}</span>`;
+  if (playable) el.onclick = () => { if (closePicker) closePicker(); playStream(s, addon, ctx); };
   return el;
 }
 
 async function collectSubs(stream, ctx) {
-  const pref = profile.settings.slang;
-  if (profile.settings.subsOff || !pref) return [];
-  const out = [];
-  const add = (list) => { for (const s of list || []) { if (s && isWeb(s.url) && langMatches(s.lang, pref)) out.push(s.url); } };
+  const out = [], seen = new Set();
+  const add = (list) => {
+    for (const sub of list || []) {
+      if (!sub || !isWeb(sub.url) || seen.has(sub.url)) continue;
+      seen.add(sub.url);
+      out.push({url:sub.url,lang:sub.lang || sub.language || "und",label:sub.label || sub.name || ""});
+    }
+  };
   add(stream.subtitles);
   if (!ctx.noTrack) {
     const addons = profile.addons.filter((a) => addonSupports(a, "subtitles", ctx.type, ctx.videoId));
     await Promise.all(addons.map((a) =>
       getJSON(`${addonBase(a.url)}/subtitles/${ctx.type}/${enc(ctx.videoId)}.json`, 5000).then((d) => add(d.subtitles)).catch(() => {})));
   }
-  return out.slice(0, 6);
+  return out.slice(0, 24);
 }
 
 let watching = null;   // { playId, ctx, lastSave }
+let activePlaybackCtx = null;
 
 async function playStream(stream, addon, ctx) {
   let url = stream.url;
+  const sizeBytes = streamSizeBytes(stream);
+  ctx = Object.assign({}, ctx, { sizeBytes, autoEligible: sizeBytes != null && sizeBytes <= MAX_AUTOPLAY_BYTES });
   if (!isWeb(url) && stream.ytId) url = "https://www.youtube.com/watch?v=" + stream.ytId;
   if (!isWeb(url)) { toast("That source cannot be played.", true); return; }
   const headers = [];
@@ -2136,21 +2238,22 @@ async function startPlayer(url, ctx, subs, headers) {
   const s = profile.settings;
   if (window.BradFlixAndroid) {
     try {
+      activePlaybackCtx = ctx;
       const record = ctx.record || {};
       const start = ctx.noTrack || ctx.fromStart ? 0 : (resumeAt(ctx.videoId) > 0 ? resumeAt(ctx.videoId) : (ctx.type === "series" && s.skipIntro ? Number(s.skipIntroSeconds || 0) : 0));
       window.BradFlixBridge.play(JSON.stringify({
-        url, title: ctx.title || "BradFlix", type: ctx.type || "", start,
+        url, title: ctx.title || "BradsHub", type: ctx.type || "", start,
         audioLanguage: s.alang || "", subtitleLanguage: s.slang || "", subtitlesOff: !!s.subsOff,
         subtitles: subs || [], headers: (headers || []).reduce((out, line) => {
           const split = line.indexOf(":"); if (split > 0) out[line.slice(0, split).trim()] = line.slice(split + 1).trim(); return out;
         }, {}),
         profileId: profile.id, noTrack: !!ctx.noTrack,
-        context: {noTrack:!!ctx.noTrack, videoId:ctx.videoId || "", type:ctx.type || "movie", title:ctx.title || "", season:ctx.season, episode:ctx.episode,
+        context: {noTrack:!!ctx.noTrack, sizeBytes:ctx.sizeBytes || 0, autoEligible:!!ctx.autoEligible, videoId:ctx.videoId || "", type:ctx.type || "movie", title:ctx.title || "", season:ctx.season, episode:ctx.episode,
           record:{id:record.id || ctx.videoId || "", name:record.name || ctx.title || "", poster:record.poster || "", bg:record.bg || ""}}
       }));
       if (!ctx.noTrack) addHistory(ctx);
-      toast("Playing in BradFlix…");
-    } catch (e) { toast("BradFlix could not open this source.", true); }
+      toast("Playing in BradsHub…");
+    } catch (e) { toast("BradsHub could not open this source.", true); }
     return;
   }
   const body = {
@@ -2182,7 +2285,7 @@ async function pollPlayer() {
   save();
   if (view && view.refresh && profile) view.refresh();
   const next = w.ctx.episodes ? nextEpisode(w.ctx.episodes, w.ctx.videoId) : null;
-  if (next && profile === w.profile && profile.settings.autoplayNext && finishedNums(st.pos, st.dur)) countdownNext(w.ctx, next);
+  if (next && w.ctx.autoEligible && profile === w.profile && profile.settings.autoplayNext && finishedNums(st.pos, st.dur)) countdownNext(w.ctx, next);
 }
 setInterval(pollPlayer, 2000);
 
@@ -2204,9 +2307,14 @@ function countdownNext(prev, next) {
 async function playNext(prev, next) {
   const ctx = Object.assign({}, prev, { videoId: next.id, title: `${prev.record.name} ${epLabel(next)}`,
     season: next.season, episode: next.episode, fromStart: false });
-  const session = runStreams(ctx.type, ctx.videoId);
-  const result = await session.first;
-  if (!result) { toast("No playable source found for the next episode.", true); return; }
+  const records = [];
+  const session = runStreams(ctx.type, ctx.videoId, (addon, streams) => {
+    const addonIndex = session.addons.indexOf(addon);
+    streams.forEach((stream) => records.push({stream,addon,addonIndex}));
+  });
+  await session.first;
+  const result = bestKnownSmall(records);
+  if (!result) { toast("The next episode has no source with a reported size of 10 GB or less. Choose it manually.", true); return; }
   playStream(result.stream, result.addon, ctx);
 }
 
@@ -2233,7 +2341,7 @@ async function refreshAddons(silent) {
 //  Themes
 // =====================================================================
 const THEME_PRESETS = [
-  { id: "bradflix", name: "BradFlix", vars: { "--bg": "#0d0f13", "--panel": "#171a21", "--panel-hi": "#222733", "--line": "#2a303c", "--text": "#eef0f4", "--muted": "#98a0b0", "--accent": "#ff4d5e", "--accent-ink": "#1a0508" } },
+  { id: "bradflix", name: "BradsHub", vars: { "--bg": "#0d0f13", "--panel": "#171a21", "--panel-hi": "#222733", "--line": "#2a303c", "--text": "#eef0f4", "--muted": "#98a0b0", "--accent": "#ff4d5e", "--accent-ink": "#1a0508" } },
   { id: "harbor", name: "Harbor", vars: { "--bg": "#141414", "--panel": "#1e1e1e", "--panel-hi": "#2a2a2a", "--line": "#353535", "--text": "#f1ece2", "--muted": "#9a9488", "--accent": "#d9a441", "--accent-ink": "#241a05" } },
   { id: "nord", name: "Nord", vars: { "--bg": "#2e3440", "--panel": "#3b4252", "--panel-hi": "#434c5e", "--line": "#4c566a", "--text": "#eceff4", "--muted": "#a3adc2", "--accent": "#88c0d0", "--accent-ink": "#1b2a30" } },
   { id: "dracula", name: "Dracula", vars: { "--bg": "#1e1f29", "--panel": "#282a36", "--panel-hi": "#343746", "--line": "#44475a", "--text": "#f8f8f2", "--muted": "#a4a8c7", "--accent": "#bd93f9", "--accent-ink": "#1b1230" } },
@@ -2478,7 +2586,7 @@ function settingsThemes(box) {
       b.onclick = async () => {
         const t = state.themes.find((x) => x.id === b.dataset.exp);
         const safe = t.name.replace(/[^\w-]+/g, "_");
-        const path = await askText("Save theme to this file", { value: `~/BradFlix-theme-${safe}.json`, okLabel: "Export" });
+        const path = await askText("Save theme to this file", { value: `~/BradsHub-theme-${safe}.json`, okLabel: "Export" });
         if (!path) return;
         const res = await fetch("/api/file/write", { method: "POST", body: JSON.stringify({ path, content: JSON.stringify(t, null, 1) }) });
         toast(res.ok ? "Theme saved." : "Could not save there. Use a full path ending in .json", !res.ok);
@@ -2535,8 +2643,8 @@ function settingsPlayback(box) {
       <select id="slang">${langOptions(s.slang, true, "No preference")}</select>
       <div class="hint">Used for subtitles that come with a stream or from your subtitle add-ons.</div></div>
     <div class="check"><input type="checkbox" id="soff" ${s.subsOff ? "checked" : ""}><label for="soff">Turn subtitles off by default</label></div>
-    <div class="check"><input type="checkbox" id="afirst" ${s.autoplayFirst ? "checked" : ""}><label for="afirst"><b>Automatically play a stream when I press Play.</b><br><span class="muted">Waits for all compatible add-ons, then starts the highest-ranked playable stream. Turn this off to choose from the source list.</span></label></div>
-    <div class="check"><input type="checkbox" id="anext" ${s.autoplayNext ? "checked" : ""}><label for="anext"><b>Autoplay the next episode.</b><br><span class="muted">When an episode finishes, the next one starts after a short countdown.</span></label></div>
+    <div class="check"><input type="checkbox" id="afirst" ${s.autoplayFirst ? "checked" : ""}><label for="afirst"><b>Automatically play a stream when I press Play.</b><br><span class="muted">Only sources reporting a file size of 10 GB or less can start automatically; unknown sizes stay in the picker.</span></label></div>
+    <div class="check"><input type="checkbox" id="anext" ${s.autoplayNext ? "checked" : ""}><label for="anext"><b>Autoplay the next episode.</b><br><span class="muted">After a finished episode, BradsHub starts a next-episode source reported as 10 GB or less after a short countdown.</span></label></div>
     <div class="check"><input type="checkbox" id="beststream" ${s.bestStream !== false ? "checked" : ""}><label for="beststream"><b>Rank streams using my preferences</b><br><span class="muted">Uses detected resolution, your minimum/maximum quality, stream labels and add-on order. Some add-ons provide incomplete source details.</span></label></div>
     <div class="field"><label class="t" for="minq">Minimum preferred quality</label><select id="minq"><option value="any" ${String(s.minQuality||"any")==="any"?"selected":""}>Any quality</option><option value="480" ${String(s.minQuality||"any")==="480"?"selected":""}>480p</option><option value="720" ${String(s.minQuality||"any")==="720"?"selected":""}>720p</option><option value="1080" ${String(s.minQuality||"any")==="1080"?"selected":""}>1080p</option></select></div>
     <div class="field"><label class="t" for="maxq">Maximum preferred quality</label><select id="maxq"><option value="720" ${String(s.maxQuality||2160)==="720"?"selected":""}>720p</option><option value="1080" ${String(s.maxQuality||2160)==="1080"?"selected":""}>1080p</option><option value="2160" ${String(s.maxQuality||2160)==="2160"?"selected":""}>4K / 2160p</option></select></div>
@@ -2565,7 +2673,7 @@ function settingsPlayback(box) {
 }
 
 function settingsAddons(box) {
-  box.innerHTML = `<div class="note">Add-ons are what find video links. BradFlix does not include any,
+  box.innerHTML = `<div class="note">Add-ons are what find video links. BradsHub does not include any,
     so it only shows movie and show information until you add some. They stay up to date automatically.
     Only add add-ons from sources you trust, and that are legal where you live.</div>
     <div class="searchbar"><input id="url" type="text" placeholder="Paste an add-on link here" autocomplete="off">
@@ -2632,7 +2740,7 @@ function settingsCatalogs(box) {
     <div class="list" id="cl"></div>
     <hr><section class="catalog-group-form"><h3>Catalog groups</h3>
       <div class="field"><label class="t" for="group-name">Group name</label><input id="group-name" maxlength="48" placeholder="For example, Movies or Anime"></div>
-      <div class="field"><label class="t" for="group-image">Cover image URL (optional)</label><input id="group-image" type="url" placeholder="https://…"><div class="hint">Use artwork you have permission to use. Leave blank for BradFlix's red cinema background.</div></div>
+      <div class="field"><label class="t" for="group-image">Cover image URL (optional)</label><input id="group-image" type="url" placeholder="https://…"><div class="hint">Use artwork you have permission to use. Leave blank for BradsHub's red cinema background.</div></div>
       <div class="field"><span class="t">Choose catalogs to include</span><div id="group-picks" class="group-picks"></div></div>
       <div class="btns"><button class="btn" id="create-group">Create group</button></div>
       <div class="list" id="catalog-groups"></div>
@@ -2681,12 +2789,12 @@ function settingsData(box) {
       <div class="inline"><input id="syncp" type="text" placeholder="~/Sync/wuplay.json" value="${esc(state.syncPath)}">
       <button class="btn" id="syncsave">Save</button><button class="btn quiet" id="syncnow">Sync now</button></div>
       <div class="hint">Pick a file inside a folder that Syncthing, Nextcloud, Dropbox or similar keeps in sync across your computers.
-      BradFlix keeps your profiles, lists, history and progress in that file and picks up newer changes when it starts. Leave empty to turn off.
+      BradsHub keeps your profiles, lists, history and progress in that file and picks up newer changes when it starts. Leave empty to turn off.
       The newest data wins, so avoid using two computers at the same moment.</div></div>
 
     <h3>Backup</h3>
     <div class="field"><label class="t" for="bkp">Backup file</label>
-      <div class="inline"><input id="bkp" type="text" value="~/BradFlix-backup.json">
+      <div class="inline"><input id="bkp" type="text" value="~/BradsHub-backup.json">
       <button class="btn" id="bexp">Export</button><button class="btn quiet" id="bimp">Import</button></div>
       <div class="hint">Export saves everything for all profiles. Import replaces what is here with the contents of that file.</div></div>
 
@@ -2694,7 +2802,7 @@ function settingsData(box) {
     <div class="btns"><button class="btn danger small" id="chist">Clear history</button>
       <button class="btn danger small" id="cprog">Clear watch progress</button>
       <button class="btn danger small" id="cwipe">Erase everything</button></div>
-    <p class="muted">For safety, BradFlix's local management page is served only inside its own app window.</p>`;
+    <p class="muted">For safety, BradsHub's local management page is served only inside its own app window.</p>`;
 
   if (window.BradFlixAndroid) {
     const syncField = $("#syncp")?.closest(".field");
@@ -2721,8 +2829,8 @@ function settingsData(box) {
     const res = await fetch("/api/file/read", { method: "POST", body: JSON.stringify({ path: $("#bkp").value }) });
     if (!res.ok) { toast("Could not read that file.", true); return; }
     let data;
-    try { data = JSON.parse((await res.json()).content); } catch (e) { toast("That file is not a BradFlix backup.", true); return; }
-    if (!data || !Array.isArray(data.profiles)) { toast("That file is not a BradFlix backup.", true); return; }
+    try { data = JSON.parse((await res.json()).content); } catch (e) { toast("That file is not a BradsHub backup.", true); return; }
+    if (!data || !Array.isArray(data.profiles)) { toast("That file is not a BradsHub backup.", true); return; }
     if (!(await confirmBox("Replace everything here with the backup?", "Replace"))) return;
     const keep = state.syncPath;
     state = migrate(data); state.syncPath = keep;
