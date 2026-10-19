@@ -1,6 +1,6 @@
 # BradFlix for Android TV and Android
 
-BradFlix is a customizable movie and series discovery app for Android TV, phones, and tablets. It keeps the TV remote interface on television devices and uses a touch-friendly, labeled bottom navigation bar on smaller touch screens. Its Android interface is based on the catalog browser included in the supplied BradFlix source, with profiles, configurable catalogs, search, watchlists, add-ons, themes, and TV remote navigation.
+BradFlix is a customizable movie and series discovery app for Android TV, phones, and tablets. It keeps the TV remote interface on television devices and uses a touch-friendly, multi-row labeled bottom navigation menu on smaller touch screens. Its Android interface is based on the catalog browser included in the supplied BradFlix source, with profiles, configurable catalogs, search, watchlists, add-ons, themes, and TV remote navigation.
 
 ## What BradFlix does
 
