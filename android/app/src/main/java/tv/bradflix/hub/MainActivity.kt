@@ -64,6 +64,12 @@ class MainActivity : Activity() {
 
     private inner class AndroidBridge {
         @JavascriptInterface
+        fun isTelevision(): Boolean {
+            val mode = getSystemService(UI_MODE_SERVICE) as android.app.UiModeManager
+            return mode.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+        }
+
+        @JavascriptInterface
         fun play(payload: String): Boolean {
             val data = runCatching { JSONObject(payload) }.getOrNull() ?: return false
             val raw = data.optString("url")
