@@ -119,7 +119,7 @@ class MainActivity : Activity() {
             }.getOrNull()
             runOnUiThread {
                 if (latest == null || latest.optBoolean("draft", true) || latest.optBoolean("prerelease", true)) {
-                    if (showUpToDate) Toast.makeText(this, "No published successful build is available yet.", Toast.LENGTH_LONG).show()
+                    if (showUpToDate) Toast.makeText(this, "No published successful BradsHub build is available yet.", Toast.LENGTH_LONG).show()
                     return@runOnUiThread
                 }
                 val tag = latest.optString("tag_name")
@@ -128,11 +128,11 @@ class MainActivity : Activity() {
                     (0 until assets.length()).map { assets.getJSONObject(it) }.firstOrNull { it.optString("name").endsWith(".apk") }
                 }
                 if (asset == null || tag == prefs.getString("dismissed_update", "") || !isNewer(tag.removePrefix("v"), version)) {
-                    if (showUpToDate) Toast.makeText(this, "BradFlix is up to date.", Toast.LENGTH_LONG).show()
+                    if (showUpToDate) Toast.makeText(this, "BradsHub is up to date.", Toast.LENGTH_LONG).show()
                     return@runOnUiThread
                 }
                 AlertDialog.Builder(this)
-                    .setTitle("BradFlix update available")
+                    .setTitle("BradsHub update available")
                     .setMessage("Version $tag passed its GitHub Actions build and was published. Download and install it now?")
                     .setPositiveButton("Update") { _, _ -> installUpdate(asset.getString("browser_download_url")) }
                     .setNegativeButton("Later") { _, _ -> prefs.edit().putString("dismissed_update", tag).apply() }
@@ -156,7 +156,7 @@ class MainActivity : Activity() {
                     if (android.os.Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
                         prefs.edit().putBoolean("install_after_permission", true).apply()
                         startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
-                        Toast.makeText(this, "Allow BradFlix to install updates, then return here.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Allow BradsHub to install updates, then return here.", Toast.LENGTH_LONG).show()
                         return@onSuccess
                     }
                     val uri = FileProvider.getUriForFile(this, "$packageName.updates", apk)
