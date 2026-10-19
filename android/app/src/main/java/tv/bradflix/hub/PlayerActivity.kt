@@ -88,9 +88,9 @@ class PlayerActivity : Activity() {
             FrameLayout.LayoutParams.WRAP_CONTENT,
             Gravity.TOP or Gravity.END
         ).apply { topMargin = 20; rightMargin = 20 })
-        view.setControllerVisibilityListener { visibility ->
+        view.setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
             trackButtons.visibility = visibility
-        }
+        })
         setContentView(root)
 
         val headers = mutableMapOf<String, String>()
