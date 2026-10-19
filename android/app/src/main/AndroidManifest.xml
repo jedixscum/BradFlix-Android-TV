@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:theme="@style/AppTheme"
-        android:label="BradFlix"
+        android:label="BradsHub"
         android:icon="@drawable/bradflix_icon"
         android:roundIcon="@drawable/bradflix_icon"
         android:usesCleartextTraffic="false">
