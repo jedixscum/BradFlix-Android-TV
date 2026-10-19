@@ -69,7 +69,7 @@ can teach BradFlix to read it properly.
 ## Features
 
 - Profiles with separate settings, lists, history and add-ons, plus optional PINs
-- Home with a rotating banner, Continue watching, Top 10 rows and your catalogs
+- Home with a rotating banner, Continue watching, Top 10 rows, custom named catalog sections and your catalogs
 - Discover with multi-genre mixing, plus Movies, Shows and Anime rooms
 - TV episode release calendar with week navigation (TVmaze schedule data)
 - Search, including your add-ons that support search
@@ -77,13 +77,15 @@ can teach BradFlix to read it properly.
 - Watch progress, resume, watched marks, autoplay of the next episode, preference-ranked stream selection, optional automatic playback, and configurable fixed opening skip for episodes
 - Cast and crew, person pages, similar titles, trailers
 - Preferred audio and subtitle languages
-- Add-ons that update themselves, a metadata provider choice, and catalog control
+- Add-ons that update themselves, a metadata provider choice, catalog control, custom Home grouping and catalog ordering
+- Custom regular-expression rules to prefer or exclude matching streams during automatic playback
+- A short, skippable Netflix-inspired BradFlix opening animation
 - Sync between computers through a file in a Syncthing, Nextcloud or Dropbox folder
 - Backups, and no accounts, tracking or analytics
 
 ## Current limitations
 
-BradFlix is much smaller than Harbor. The Anime page uses built-in Animation catalogs and anime-specific catalogs exposed by installed add-ons; a dedicated anime catalog requires a compatible add-on. The release calendar uses TVmaze schedule data and needs an internet connection. Skip intro currently skips a user-configured number of seconds at the beginning of a new episode; it does not automatically detect intro boundaries. Stream ranking is best-effort because add-ons may omit quality and seed metadata. BradFlix does not include Live TV/Multiview, manga reading, watch parties, casting, tracker sync, debrid integration, trickplay previews or Harbor’s Theme Studio.
+BradFlix is an independent Linux discovery and playback client, not a source of every service's licensed catalog or subscription. The Anime page uses built-in Animation catalogs and anime-specific catalogs exposed by installed add-ons; a dedicated anime catalog requires a compatible add-on. The release calendar uses TVmaze schedule data and needs an internet connection. Skip intro currently skips a user-configured number of seconds at the beginning of a new episode; it does not automatically detect intro boundaries. Stream ranking is best-effort because add-ons may omit quality and seed metadata. BradFlix does not include Live TV/Multiview, manga reading, watch parties, casting, tracker sync, debrid integration, trickplay previews or Harbor’s Theme Studio.
 
 ## About add-ons (please read)
 
