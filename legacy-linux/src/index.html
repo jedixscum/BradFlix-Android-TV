@@ -1171,6 +1171,7 @@ function enterProfile(p) {
   updateChip();
   tab("home");
   refreshAddons(true);
+  setTimeout(() => checkLinuxUpdate(true), 1200);
 }
 
 // =====================================================================
@@ -2180,12 +2181,65 @@ let settingsTab = "playback";
 function showSettings(which) {
   if (which) settingsTab = which;
   setNav("settings"); view = null;
-  const tabs = [["playback", "Playback"], ["catalogs", "Catalogs"], ["themes", "Themes"], ["data", "Privacy & data"]];
+  const tabs = [["playback", "Playback"], ["catalogs", "Catalogs"], ["themes", "Themes"], ["updates", "Updates"], ["data", "Privacy & data"]];
   app.innerHTML = `<h2>Settings <span class="muted" style="font-size:16px;font-weight:400">for ${esc(profile.name)}</span></h2>
     <div class="tabs">${tabs.map(([k, n]) => `<button data-t="${k}" class="${k === settingsTab ? "on" : ""}">${n}</button>`).join("")}</div>
     <div id="sbody" class="form"></div>`;
   app.querySelectorAll("[data-t]").forEach((b) => { b.onclick = () => showSettings(b.dataset.t); });
-  ({ playback: settingsPlayback, catalogs: settingsCatalogs, themes: settingsThemes, data: settingsData }[settingsTab])($("#sbody"));
+  ({ playback: settingsPlayback, catalogs: settingsCatalogs, themes: settingsThemes, updates: settingsUpdates, data: settingsData }[settingsTab])($("#sbody"));
+}
+
+let updatePromptOpen = false;
+let updateCheckedThisRun = false;
+async function checkLinuxUpdate(silent) {
+  if (updateCheckedThisRun) return;
+  updateCheckedThisRun = true;
+  try {
+    const result = await getJSON("/api/update/check", 20000);
+    if (!result.ok) { if (!silent) toast(result.error || "Could not check for updates.", true); return; }
+    if (!result.available) { if (!silent) toast(`BradFlix is up to date (v${result.current}).`); return; }
+    if (!updatePromptOpen) { updatePromptOpen = true; showLinuxUpdatePrompt(result); }
+  } catch (e) { if (!silent) toast("Could not check for updates. Check your internet connection and make sure curl is installed.", true); }
+}
+
+function showLinuxUpdatePrompt(info) {
+  modal((box, close) => {
+    box.innerHTML = `<h3>BradFlix ${esc(info.version)} is ready</h3>
+      <p>A newer Linux build has been published. Your profiles and watch history are stored separately and will stay in place.</p>
+      <p class="muted">BradFlix will verify the download checksum before replacing its app file. Restart BradFlix after installation to use the new version.</p>
+      <p id="updatestatus" class="muted"></p>
+      <div class="dlgrow"><button class="btn quiet" id="updatelater">Later</button><button class="btn" id="updateinstall">Download and install</button></div>`;
+    box.querySelector("#updatelater").onclick = () => close(false);
+    box.querySelector("#updateinstall").onclick = async () => {
+      const button = box.querySelector("#updateinstall"), status = box.querySelector("#updatestatus");
+      button.disabled = true; status.textContent = "Downloading and verifying the Linux update…";
+      try {
+        const response = await fetch("/api/update/install", { method: "POST" });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "The update could not be installed.");
+        box.innerHTML = `<h3>Update installed</h3><p>BradFlix ${esc(result.version)} is installed. Close and reopen BradFlix to start the updated version.</p><div class="dlgrow"><button class="btn" id="updatedone">OK</button></div>`;
+        box.querySelector("#updatedone").onclick = () => close(true);
+      } catch (e) { status.textContent = e.message || "The update could not be installed."; button.disabled = false; }
+    };
+  });
+}
+
+function settingsUpdates(box) {
+  box.innerHTML = `<h3>Linux app updates</h3><p>BradFlix checks for a published Linux build when you open a profile. Updates are offered only after a successful GitHub Actions build has been manually published.</p>
+    <p id="updateinfo" class="muted">Checking the installed version…</p><div class="btns"><button class="btn" id="updatecheck">Check now</button></div>
+    <p class="hint">After installing an update, close and reopen BradFlix. If the app is installed in a system-owned folder, start BradFlix with an account that can replace that file or install the downloaded build manually.</p>`;
+  const status = $("#updateinfo");
+  const refresh = async (manual) => {
+    status.textContent = "Checking GitHub for a published Linux build…";
+    try {
+      const result = await getJSON("/api/update/check", 20000);
+      if (!result.ok) { status.textContent = result.error || "Could not check for updates."; return; }
+      status.textContent = result.available ? `Installed v${result.current}. Linux update v${result.version} is available.` : `BradFlix v${result.current} is up to date.`;
+      if (manual && result.available) { updatePromptOpen = true; showLinuxUpdatePrompt(result); }
+    } catch (e) { status.textContent = "Could not reach GitHub. Check your internet connection and make sure curl is installed."; }
+  };
+  $("#updatecheck").onclick = () => refresh(true);
+  refresh(false);
 }
 
 function langOptions(selected, allowNone, noneLabel) {
