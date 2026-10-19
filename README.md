@@ -50,6 +50,6 @@ The publish workflow verifies that the selected run succeeded on `main` and incl
 
 ## Original Linux source
 
-The supplied Linux source is preserved under [`legacy-linux/`](legacy-linux/). Its Rust/mpv desktop backend is separate from the Android TV client.
+The Linux desktop app and its update workflow now live in the separate [BradFlix-Linux repository](https://github.com/jedixscum/BradFlix-Linux).
 
 BradFlix is an independent project. Service names and add-ons do not imply endorsement or affiliation.
