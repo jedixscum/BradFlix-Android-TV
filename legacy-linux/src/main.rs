@@ -26,6 +26,9 @@ use wry::{WebViewBuilder, WebViewBuilderExtUnix};
 
 const PAGE: &str = include_str!("index.html");
 const EMPTY_STATE: &str = r#"{}"#;
+const GITHUB_RELEASES: &str = "https://api.github.com/repos/jedixscum/BradFlix-Android-TV/releases?per_page=100";
+const LINUX_BINARY_ASSET: &str = "bradflix-linux-x86_64";
+const LINUX_CHECKSUM_ASSET: &str = "bradflix-linux-x86_64.sha256";
 
 // The newest play request, and what mpv last told us about it.
 static PLAY_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -95,6 +98,115 @@ fn is_trusted(request: &Request, address: &str) -> bool {
 
 fn is_web_link(text: &str) -> bool {
     text.starts_with("http://") || text.starts_with("https://")
+}
+
+fn github_json(url: &str) -> Result<Value, String> {
+    let output = Command::new("curl")
+        .args(["--fail", "--silent", "--show-error", "--location", "--max-time", "15", "--header", "Accept: application/vnd.github+json", "--header", "User-Agent: BradFlix-Linux"])
+        .arg(url)
+        .output()
+        .map_err(|e| format!("Could not start curl: {e}"))?;
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+    }
+    serde_json::from_slice(&output.stdout).map_err(|e| format!("GitHub returned invalid release data: {e}"))
+}
+
+fn latest_linux_release() -> Result<Value, String> {
+    let releases = github_json(GITHUB_RELEASES)?;
+    let list = releases.as_array().ok_or("GitHub returned an unexpected releases list")?;
+    list.iter()
+        .filter(|release| release["draft"].as_bool() == Some(false) && release["prerelease"].as_bool() == Some(false))
+        .filter(|release| release["tag_name"].as_str().map(|tag| tag.starts_with("linux-v")).unwrap_or(false))
+        .max_by_key(|release| version_tuple(release["tag_name"].as_str().unwrap_or("").strip_prefix("linux-v").unwrap_or("")))
+        .cloned()
+        .ok_or_else(|| "No published Linux BradFlix update is available yet.".to_string())
+}
+
+fn release_asset<'a>(release: &'a Value, name: &str) -> Result<&'a str, String> {
+    release["assets"].as_array()
+        .and_then(|assets| assets.iter().find(|asset| asset["name"].as_str() == Some(name)))
+        .and_then(|asset| asset["browser_download_url"].as_str())
+        .ok_or_else(|| format!("The published Linux update is missing {name}."))
+}
+
+fn check_linux_update() -> String {
+    let current = env!("CARGO_PKG_VERSION");
+    match latest_linux_release() {
+        Ok(release) => {
+            let tag = release["tag_name"].as_str().unwrap_or("");
+            let version = tag.strip_prefix("linux-v").unwrap_or("");
+            let newer = version_tuple(version) > version_tuple(current);
+            serde_json::json!({
+                "ok": true, "current": current, "available": newer,
+                "version": version, "tag": tag,
+                "published_at": release["published_at"],
+                "release_url": release["html_url"]
+            }).to_string()
+        }
+        Err(error) => serde_json::json!({ "ok": false, "current": current, "error": error }).to_string(),
+    }
+}
+
+fn version_tuple(version: &str) -> (u64, u64, u64) {
+    let mut parts = version.split('.').map(|part| part.parse::<u64>().unwrap_or(0));
+    (parts.next().unwrap_or(0), parts.next().unwrap_or(0), parts.next().unwrap_or(0))
+}
+
+fn download_asset(url: &str, destination: &PathBuf) -> Result<(), String> {
+    let output = Command::new("curl")
+        .args(["--fail", "--silent", "--show-error", "--location", "--max-time", "180", "--output"])
+        .arg(destination)
+        .arg(url)
+        .output()
+        .map_err(|e| format!("Could not start curl: {e}"))?;
+    if output.status.success() { Ok(()) } else {
+        let _ = std::fs::remove_file(destination);
+        Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+    }
+}
+
+fn install_latest_linux_update() -> Result<String, String> {
+    let release = latest_linux_release()?;
+    let tag = release["tag_name"].as_str().ok_or("The release has no version tag")?;
+    let version = tag.strip_prefix("linux-v").ok_or("This is not a Linux release")?;
+    if version_tuple(version) <= version_tuple(env!("CARGO_PKG_VERSION")) {
+        return Err("BradFlix is already up to date.".to_string());
+    }
+    let binary_url = release_asset(&release, LINUX_BINARY_ASSET)?;
+    let checksum_url = release_asset(&release, LINUX_CHECKSUM_ASSET)?;
+    let executable = std::env::current_exe().map_err(|e| format!("Could not locate the running app: {e}"))?;
+    let folder = executable.parent().ok_or("Could not locate the app folder")?;
+    let temp_base = format!(".bradflix-update-{}", std::process::id());
+    let temp_binary = folder.join(&temp_base);
+    let temp_checksum = std::env::temp_dir().join(format!("{temp_base}.sha256"));
+    let result = (|| {
+        download_asset(binary_url, &temp_binary)?;
+        download_asset(checksum_url, &temp_checksum)?;
+        let expected = std::fs::read_to_string(&temp_checksum).map_err(|e| format!("Could not read update checksum: {e}"))?;
+        let expected = expected.split_whitespace().next().unwrap_or("").to_ascii_lowercase();
+        if expected.len() != 64 || !expected.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err("The update checksum file is invalid.".to_string());
+        }
+        let output = Command::new("sha256sum").arg(&temp_binary).output()
+            .map_err(|e| format!("Could not verify update checksum (install sha256sum): {e}"))?;
+        let actual = String::from_utf8_lossy(&output.stdout).split_whitespace().next().unwrap_or("").to_ascii_lowercase();
+        if !output.status.success() || actual != expected { return Err("The downloaded update failed its SHA-256 check.".to_string()); }
+        let mut file = std::fs::File::open(&temp_binary).map_err(|e| format!("Could not open the downloaded app: {e}"))?;
+        let mut magic = [0u8; 20];
+        file.read_exact(&mut magic).map_err(|_| "The downloaded file is not a Linux executable.".to_string())?;
+        if &magic[..4] != b"\x7fELF" || (cfg!(target_arch = "x86_64") && magic[18..20] != [0x3e, 0x00]) {
+            return Err("The update is not a compatible Linux executable.".to_string());
+        }
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&temp_binary, std::fs::Permissions::from_mode(0o755))
+            .map_err(|e| format!("Could not make the update executable: {e}"))?;
+        std::fs::rename(&temp_binary, &executable).map_err(|e| format!("Could not replace {}: {e}", executable.display()))?;
+        Ok(version.to_string())
+    })();
+    let _ = std::fs::remove_file(&temp_binary);
+    let _ = std::fs::remove_file(&temp_checksum);
+    result
 }
 
 /// Keeps only letters and commas, so language settings are always safe.
@@ -308,6 +420,13 @@ fn handle(mut request: Request, address: &str) {
             };
             reply(&status, "application/json", 200)
         }
+
+        (Method::Get, "/api/update/check") => reply(&check_linux_update(), "application/json", 200),
+
+        (Method::Post, "/api/update/install") => match install_latest_linux_update() {
+            Ok(version) => reply(&serde_json::json!({"ok": true, "version": version, "restartRequired": true}).to_string(), "application/json", 200),
+            Err(error) => reply(&serde_json::json!({"ok": false, "error": error}).to_string(), "application/json", 500),
+        },
 
         (Method::Post, "/api/file/read") => {
             let body = read_body(&mut request);
