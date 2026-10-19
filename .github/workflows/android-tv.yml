@@ -1,0 +1,71 @@
+name: Android TV build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  debug-build:
+    name: Build installable debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build debug APK
+        run: gradle -p android assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bradflix-android-tv-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+  signed-apk:
+    name: Build signed update APK
+    needs: debug-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Prepare signing key
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/bradflix-release.jks"
+        if: ${{ env.KEYSTORE_BASE64 != '' && env.KEY_ALIAS != '' && env.KEYSTORE_PASSWORD != '' && env.KEY_PASSWORD != '' }}
+      - name: Skip signed APK until signing secrets are configured
+        if: ${{ steps.signing.outcome == 'skipped' }}
+        run: echo 'Debug APK built and uploaded. Add all four Android signing secrets to create an update APK artifact.'
+      - name: Build signed release APK
+        if: ${{ steps.signing.outcome == 'success' }}
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/bradflix-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle -p android -PbuildVersionCode=${{ github.run_number }} -PbuildVersionName=0.1.${{ github.run_number }} assembleRelease
+      - name: Upload signed APK for manual publishing
+        if: ${{ steps.signing.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bradflix-android-tv-release
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
