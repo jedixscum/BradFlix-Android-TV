@@ -47,11 +47,34 @@
   body.locked #side { display: none; }
   body.locked main { margin-left: 0; }
   .brand {
-    font-size: 27px; font-weight: 950; letter-spacing: -0.065em; padding: 0 12px 18px;
-    color: #e50914; text-shadow: 0 2px 18px rgba(229,9,20,.22);
-    font-family: Impact, "Arial Narrow", Arial, Helvetica, sans-serif; transform: scaleX(.96); transform-origin: left center;
-    white-space: nowrap; text-transform: none;
+    font-size: 29px; font-weight: 950; letter-spacing: -.055em; padding: 0 12px 18px;
+    color: #e50914; text-shadow: 0 2px 22px rgba(229,9,20,.34);
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    transform: scaleX(.94); transform-origin: left center; white-space: nowrap;
   }
+  .brand-intro {
+    display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center;
+    overflow:hidden; background:radial-gradient(ellipse at center, #260508 0%, #09090c 48%, #020203 100%);
+    opacity:1; transition:opacity .55s ease;
+  }
+  body.android-tv .brand-intro { display:flex; }
+  .brand-intro::before, .brand-intro::after { content:""; position:absolute; inset:-30%; pointer-events:none; }
+  .brand-intro::before {
+    background:linear-gradient(108deg, transparent 39%, rgba(229,9,20,.08) 46%, rgba(255,30,42,.7) 49.5%, rgba(229,9,20,.12) 52%, transparent 59%);
+    transform:translateX(-80%); animation:intro-light 2.45s cubic-bezier(.2,.8,.25,1) .12s both;
+  }
+  .brand-intro::after { background:radial-gradient(ellipse at center, rgba(229,9,20,.22), transparent 49%); opacity:0; animation:intro-glow 2.7s ease both; }
+  .brand-intro-mark {
+    position:relative; z-index:1; color:#e50914; font-family:Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;
+    font-size:clamp(56px, 12vw, 132px); font-weight:950; letter-spacing:-.055em;
+    text-shadow:0 0 28px rgba(229,9,20,.22); transform:scale(.92); opacity:0;
+    animation:intro-wordmark 2.7s cubic-bezier(.15,.75,.2,1) both;
+  }
+  .brand-intro.is-closing { opacity:0; pointer-events:none; }
+  @keyframes intro-light { 0%{transform:translateX(-80%)} 72%{transform:translateX(15%)} 100%{transform:translateX(15%)} }
+  @keyframes intro-glow { 0%,35%{opacity:0} 68%,100%{opacity:1} }
+  @keyframes intro-wordmark { 0%{opacity:0;filter:blur(18px);transform:scale(.9);letter-spacing:.12em} 48%{opacity:1;filter:blur(0);transform:scale(1.02);letter-spacing:-.055em} 72%,100%{opacity:1;filter:blur(0);transform:scale(1)} }
+  @media (prefers-reduced-motion:reduce) { .brand-intro::before,.brand-intro::after,.brand-intro-mark { animation-duration:.75s; } }
   .brand::first-letter { letter-spacing: -.09em; }
   /* Keep the BradFlix wordmark branded even when a Harbor theme is imported. */
   #side .brand { color: #e50914 !important; font-weight: 950 !important; }
@@ -272,7 +295,26 @@
   .avatar { display: grid; place-items: center; border-radius: 50%; color: #15112e; font-weight: 800; margin: 0 auto; flex: 0 0 auto; }
   .lock { font-size: 13px; color: var(--muted); }
   .center { text-align: center; }
-  .splash { font-size: 44px; font-weight: 900; letter-spacing: -0.04em; margin: 40px 0 0; background: linear-gradient(90deg, var(--text), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .splash {
+    font-size:clamp(52px, 7vw, 86px); font-weight:950; letter-spacing:-.055em; margin:40px 0 0;
+    color:#e50914; font-family:Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;
+    text-shadow:0 4px 28px rgba(229,9,20,.3);
+  }
+  .catalog-group-shelf .group-scroller { display:flex; gap:18px; overflow-x:auto; padding:12px 4px 20px; }
+  .catalog-group-tile {
+    flex:0 0 clamp(210px, 22vw, 310px); position:relative; min-height:118px; border:1px solid rgba(255,255,255,.12);
+    border-radius:var(--radius); overflow:hidden; color:#fff; text-align:left; padding:18px;
+    background:linear-gradient(115deg,rgba(229,9,20,.78),rgba(32,12,18,.88)),#171a21;
+    background-size:cover; background-position:center; box-shadow:0 12px 32px rgba(0,0,0,.24); transition:transform .18s,box-shadow .18s;
+  }
+  .catalog-group-tile::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(0,0,0,.56),rgba(0,0,0,.08)); }
+  .catalog-group-tile:focus-visible { outline:4px solid var(--accent); outline-offset:3px; transform:scale(1.035); box-shadow:0 18px 42px rgba(0,0,0,.48); }
+  .catalog-group-tile strong,.catalog-group-tile small { position:relative; z-index:1; display:block; }
+  .catalog-group-tile strong { font-size:23px; text-shadow:0 2px 10px #000; }
+  .catalog-group-tile small { margin-top:7px; color:rgba(255,255,255,.82); }
+  .catalog-group-form .group-picks { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px; max-height:260px; overflow:auto; padding:8px; border:1px solid var(--line); border-radius:10px; }
+  .catalog-group-form .group-picks label { display:flex; gap:9px; align-items:center; padding:8px; border-radius:8px; background:var(--panel); }
+  .catalog-group-form .group-picks input { width:20px; height:20px; accent-color:var(--accent); }
 
   .form { max-width: 760px; }
   .field { margin: 0 0 18px; }
@@ -374,9 +416,34 @@
   <button id="chip" title="Switch profile"></button>
 </aside>
 <main id="app"></main>
+<div id="brand-intro" class="brand-intro" aria-hidden="true"><div class="brand-intro-mark">BradFlix</div></div>
 
 <script>
 "use strict";
+function startBradFlixIntro() {
+  const intro = document.getElementById("brand-intro");
+  if (!intro) return;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    document.removeEventListener("keydown", skip, true);
+    intro.classList.add("is-closing");
+    setTimeout(() => intro.remove(), 600);
+  };
+  const skip = (event) => {
+    if (!finished) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      finish();
+    }
+  };
+  document.addEventListener("keydown", skip, true);
+  intro.addEventListener("click", finish, { once:true });
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(finish, reduced ? 950 : 3000);
+}
+
 // =====================================================================
 //  Constants
 // =====================================================================
@@ -386,6 +453,7 @@
 window.BradFlixAndroid = !!(window.BradFlixBridge && window.BradFlixBridge.play);
 if (window.BradFlixAndroid) {
   document.body.classList.add("android-tv");
+  startBradFlixIntro();
   window.bradflixHandleBack = () => {
     const overlay = document.querySelector(".overlay");
     if (!overlay) return false;
@@ -568,7 +636,7 @@ let state = null;     // everything that is saved
 let profile = null;   // the profile currently watching
 
 function defaultSettings() {
-  return { alang: "eng", slang: "eng", subsOff: false, autoplayFirst: false, autoplayNext: true, metaAddon: "", bestStream: true, minQuality: "any", maxQuality: "2160", skipIntro: false, skipIntroSeconds: 90 };
+  return { alang: "eng", slang: "eng", subsOff: false, autoplayFirst: false, autoplayNext: true, metaAddon: "", bestStream: true, minQuality: "any", maxQuality: "2160", streamRules: "", skipIntro: false, skipIntroSeconds: 90 };
 }
 function fixProfile(p) {
   p.addons = p.addons || [];
@@ -576,6 +644,7 @@ function fixProfile(p) {
   p.catalogs.order = p.catalogs.order || [];
   p.catalogs.home = p.catalogs.home || {};
   p.catalogs.discover = p.catalogs.discover || {};
+  p.catalogGroups = Array.isArray(p.catalogGroups) ? p.catalogGroups : [];
   p.watchlists = p.watchlists || [];
   p.history = p.history || [];
   p.progress = p.progress || {};
@@ -1079,6 +1148,23 @@ async function showHome() {
   const heroSlot = document.createElement("div");
   app.appendChild(heroSlot);
 
+  if (profile.catalogGroups.length) {
+    const shelf = document.createElement("section");
+    shelf.className = "row catalog-group-shelf";
+    shelf.innerHTML = `<h2>Your groups</h2><div class="group-scroller">${profile.catalogGroups.map((group) => {
+      const image = isWeb(group.image) ? `background-image:linear-gradient(115deg,rgba(0,0,0,.28),rgba(0,0,0,.62)),url("${cssUrl(group.image)}")` : "";
+      const count = (group.catalogKeys || []).length;
+      return `<button class="catalog-group-tile" data-group="${esc(group.id)}" style="${image}"><strong>${esc(group.name)}</strong><small>${count} catalog${count === 1 ? "" : "s"}</small></button>`;
+    }).join("")}</div>`;
+    shelf.querySelectorAll("[data-group]").forEach((button) => {
+      button.onclick = () => {
+        const group = profile.catalogGroups.find((item) => item.id === button.dataset.group);
+        if (group) go(() => showCatalogGroup(group));
+      };
+    });
+    app.appendChild(shelf);
+  }
+
   const cw = continueItems();
   if (cw.length) addRow("Continue watching", { items: cw, variant: "wide" });
 
@@ -1106,6 +1192,20 @@ async function showHome() {
     for (let i = 0; i < 6; i++) { if (movies[i]) mixed.push(movies[i]); if (shows[i]) mixed.push(shows[i]); }
     mountHero(heroSlot, await heroItemsFrom(mixed, 4));
   } catch (e) { /* offline: no banner */ }
+}
+
+async function showCatalogGroup(group) {
+  setNav("home");
+  view = { refresh: () => showCatalogGroup(group) };
+  app.innerHTML = `${backButton()}<h2>${esc(group.name)}</h2><p class="muted">Browse the catalogs you combined for this group.</p>`;
+  wireBack();
+  const keys = new Set(group.catalogKeys || []);
+  const catalogs = allCatalogs().filter((catalog) => keys.has(catalog.key));
+  if (!catalogs.length) {
+    app.insertAdjacentHTML("beforeend", `<p class="note">This group has no available catalogs. Add or refresh its catalogs in Settings → Catalogs.</p>`);
+    return;
+  }
+  catalogs.forEach((catalog) => addRow(catalog.title, { cat: catalog, into: app }));
 }
 
 async function showRoom(type) {
@@ -1795,6 +1895,18 @@ function streamScore(stream, addon, addonIndex) {
   const seeds = Number(stream.behaviorHints && (stream.behaviorHints.videoHash ? stream.behaviorHints.seeders : 0) || stream.seeders || 0);
   score += Math.min(seeds, 500) * 2;
   if (!quality && settings.bestStream !== false) score -= 100; // prefer sources with explicit quality labels over unknown quality
+  const rules = String(settings.streamRules || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  for (const rule of rules) {
+    const mode = rule[0] === "-" ? "skip" : (rule[0] === "+" ? "prefer" : "");
+    const pattern = mode ? rule.slice(1).trim() : rule;
+    if (!pattern) continue;
+    try {
+      if (new RegExp(pattern, "i").test(label)) {
+        if (mode === "skip") return -250000;
+        score += mode === "prefer" ? 1200 : 300;
+      }
+    } catch (e) { /* ignore a malformed personal rule */ }
+  }
   if (/hevc|h265|x265/.test(label)) score += 20;
   if (/hdr|dolby vision|\bdv\b/.test(label)) score += 10;
   if (/cam|telesync|hdcam|workprint/.test(label)) score -= 1000;
@@ -1810,7 +1922,11 @@ function runStreams(type, id, onAddon) {
     const check = () => {
       if (remaining > 0 || settled) return;
       const candidates = [];
-      results.forEach((list, i) => (list || []).forEach(stream => { if (isPlayable(stream)) candidates.push({stream, addon:addons[i], score:streamScore(stream, addons[i], i)}); }));
+      results.forEach((list, i) => (list || []).forEach(stream => {
+        if (!isPlayable(stream)) return;
+        const score = streamScore(stream, addons[i], i);
+        if (score > -200000) candidates.push({stream, addon:addons[i], score});
+      }));
       candidates.sort((a,b) => b.score - a.score);
       settled = true;
       resolve(candidates.length ? {stream:candidates[0].stream, addon:candidates[0].addon} : null);
@@ -2302,6 +2418,7 @@ function settingsPlayback(box) {
     <div class="check"><input type="checkbox" id="beststream" ${s.bestStream !== false ? "checked" : ""}><label for="beststream"><b>Rank streams using my preferences</b><br><span class="muted">Uses detected resolution, your minimum/maximum quality, stream labels and add-on order. Some add-ons provide incomplete source details.</span></label></div>
     <div class="field"><label class="t" for="minq">Minimum preferred quality</label><select id="minq"><option value="any" ${String(s.minQuality||"any")==="any"?"selected":""}>Any quality</option><option value="480" ${String(s.minQuality||"any")==="480"?"selected":""}>480p</option><option value="720" ${String(s.minQuality||"any")==="720"?"selected":""}>720p</option><option value="1080" ${String(s.minQuality||"any")==="1080"?"selected":""}>1080p</option></select></div>
     <div class="field"><label class="t" for="maxq">Maximum preferred quality</label><select id="maxq"><option value="720" ${String(s.maxQuality||2160)==="720"?"selected":""}>720p</option><option value="1080" ${String(s.maxQuality||2160)==="1080"?"selected":""}>1080p</option><option value="2160" ${String(s.maxQuality||2160)==="2160"?"selected":""}>4K / 2160p</option></select></div>
+    <div class="field"><label class="t" for="streamrules">Custom stream rules</label><textarea id="streamrules" rows="5" placeholder="+HDR&#10;-CAM&#10;WEB-DL">${esc(s.streamRules || "")}</textarea><div class="hint">One pattern per line. Prefix a pattern with <b>+</b> to prefer it, or <b>-</b> to skip matching sources during Auto-play. Rules match source names and descriptions; bad patterns are ignored.</div></div>
     <div class="check"><input type="checkbox" id="skipintro" ${s.skipIntro ? "checked" : ""}><label for="skipintro"><b>Skip opening segment on episodes</b><br><span class="muted">Uses a fixed skip duration because most add-ons do not provide intro timestamps.</span></label></div>
     <div class="field"><label class="t" for="skipsecs">Opening segment duration (seconds)</label><input id="skipsecs" type="number" min="0" max="600" value="${Math.max(0,Math.min(600,Number(s.skipIntroSeconds)||90))}"><div class="hint">Only used when starting a series episode from the beginning. Resume progress takes priority.</div></div>
     <div class="field"><label class="t" for="metaa">Metadata provider</label>
@@ -2318,6 +2435,7 @@ function settingsPlayback(box) {
   $("#beststream").onchange = (e) => set("bestStream", e.target.checked);
   $("#minq").onchange = (e) => set("minQuality", e.target.value);
   $("#maxq").onchange = (e) => set("maxQuality", e.target.value);
+  $("#streamrules").onchange = (e) => set("streamRules", e.target.value);
   $("#skipintro").onchange = (e) => set("skipIntro", e.target.checked);
   $("#skipsecs").onchange = (e) => set("skipIntroSeconds", Math.max(0, Math.min(600, Number(e.target.value)||0)));
   $("#metaa").onchange = (e) => { set("metaAddon", e.target.value); metaCache.clear(); };
@@ -2365,9 +2483,39 @@ function settingsAddons(box) {
 }
 
 function settingsCatalogs(box) {
-  box.innerHTML = `<p class="muted">Choose what appears on Home and Discover, and in what order.</p>
-    <div class="list" id="cl"></div>`;
-  const draw = () => {
+  const drawGroups = () => {
+    const list = box.querySelector("#catalog-groups");
+    if (!list) return;
+    const catalogs = allCatalogs();
+    list.innerHTML = profile.catalogGroups.map((group, i) => {
+      const labels = (group.catalogKeys || []).map((key) => catalogs.find((c) => c.key === key)?.title).filter(Boolean);
+      return `<div class="item"><div class="grow"><strong>${esc(group.name)}</strong><div class="small">${esc(labels.join(" · ") || "No available catalogs")}</div></div>
+        <button class="btn quiet small" data-group-up="${i}" aria-label="Move group up" ${i === 0 ? "disabled" : ""}>↑</button>
+        <button class="btn quiet small" data-group-down="${i}" aria-label="Move group down" ${i === profile.catalogGroups.length - 1 ? "disabled" : ""}>↓</button>
+        <button class="btn danger small" data-group-delete="${i}">Remove</button></div>`;
+    }).join("") || `<p class="muted">No groups yet. Make shortcuts such as Movies, Series, or a group from your favorite add-on catalogs.</p>`;
+    list.querySelectorAll("[data-group-delete]").forEach((button) => {
+      button.onclick = () => { profile.catalogGroups.splice(Number(button.dataset.groupDelete), 1); save(); drawGroups(); };
+    });
+    const move = (index, direction) => {
+      const next = index + direction;
+      if (next < 0 || next >= profile.catalogGroups.length) return;
+      [profile.catalogGroups[index], profile.catalogGroups[next]] = [profile.catalogGroups[next], profile.catalogGroups[index]];
+      save(); drawGroups();
+    };
+    list.querySelectorAll("[data-group-up]").forEach((button) => button.onclick = () => move(Number(button.dataset.groupUp), -1));
+    list.querySelectorAll("[data-group-down]").forEach((button) => button.onclick = () => move(Number(button.dataset.groupDown), 1));
+  };
+  box.innerHTML = `<p class="muted">Arrange Home and Discover catalogs, then combine catalogs into custom Home shortcuts.</p>
+    <div class="list" id="cl"></div>
+    <hr><section class="catalog-group-form"><h3>Catalog groups</h3>
+      <div class="field"><label class="t" for="group-name">Group name</label><input id="group-name" maxlength="48" placeholder="For example, Movies or Anime"></div>
+      <div class="field"><label class="t" for="group-image">Cover image URL (optional)</label><input id="group-image" type="url" placeholder="https://…"><div class="hint">Use artwork you have permission to use. Leave blank for BradFlix's red cinema background.</div></div>
+      <div class="field"><span class="t">Choose catalogs to include</span><div id="group-picks" class="group-picks"></div></div>
+      <div class="btns"><button class="btn" id="create-group">Create group</button></div>
+      <div class="list" id="catalog-groups"></div>
+    </section>`;
+  const drawCatalogs = () => {
     const cats = allCatalogs();
     $("#cl").innerHTML = cats.map((c, i) => `
       <div class="item"><div class="grow"><div>${esc(c.title)}</div><div class="small">${esc(c.type)}</div></div>
@@ -2378,16 +2526,28 @@ function settingsCatalogs(box) {
     $("#cl").querySelectorAll("[data-h]").forEach((c) => { c.onchange = () => { profile.catalogs.home[c.dataset.h] = c.checked; save(); }; });
     $("#cl").querySelectorAll("[data-d]").forEach((c) => { c.onchange = () => { profile.catalogs.discover[c.dataset.d] = c.checked; save(); }; });
     const move = (i, dir) => {
-      const keys = cats.map((c) => c.key);
-      const j = i + dir;
+      const keys = cats.map((c) => c.key), j = i + dir;
+      if (j < 0 || j >= keys.length) return;
       [keys[i], keys[j]] = [keys[j], keys[i]];
-      profile.catalogs.order = keys;
-      save(); draw();
+      profile.catalogs.order = keys; save(); drawCatalogs(); drawGroups();
     };
     $("#cl").querySelectorAll("[data-up]").forEach((b) => { b.onclick = () => move(Number(b.dataset.up), -1); });
     $("#cl").querySelectorAll("[data-dn]").forEach((b) => { b.onclick = () => move(Number(b.dataset.dn), 1); });
+    $("#group-picks").innerHTML = cats.map((c) => `<label><input type="checkbox" data-group-catalog value="${esc(c.key)}"><span>${esc(c.title)}</span></label>`).join("") || `<span class="muted">Add a Stremio-compatible catalog add-on first.</span>`;
   };
-  draw();
+  $("#create-group").onclick = () => {
+    const name = $("#group-name").value.trim();
+    const keys = [...box.querySelectorAll("[data-group-catalog]:checked")].map((input) => input.value);
+    const image = $("#group-image").value.trim();
+    if (!name) { toast("Give your group a name first.", true); $("#group-name").focus(); return; }
+    if (!keys.length) { toast("Choose at least one catalog.", true); return; }
+    profile.catalogGroups.push({ id: uid(), name, image: isWeb(image) ? image : "", catalogKeys: keys });
+    save(); drawGroups(); $("#group-name").value = ""; $("#group-image").value = "";
+    box.querySelectorAll("[data-group-catalog]").forEach((input) => { input.checked = false; });
+    toast("Group added to Home.");
+  };
+  drawCatalogs();
+  drawGroups();
 }
 
 function settingsData(box) {
