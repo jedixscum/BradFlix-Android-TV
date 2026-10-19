@@ -158,7 +158,7 @@ class PlayerActivity : Activity() {
             }
             .setNegativeButton("Choose another source") { _, _ ->
                 errorDialog = null
-                finishWithProgress()
+                finishWithProgress("choose_source")
             }
             .setOnCancelListener {
                 errorDialog = null
@@ -213,11 +213,12 @@ class PlayerActivity : Activity() {
         return builder.build()
     }
 
-    private fun finishWithProgress() {
+    private fun finishWithProgress(action: String = "closed") {
         if (resultSent) return
         resultSent = true
         val exo = player
         val result = JSONObject().apply {
+            put("action", action)
             put("profileId", payload?.optString("profileId", ""))
             put("context", payload?.optJSONObject("context") ?: JSONObject())
             put("position", exo?.currentPosition?.coerceAtLeast(0) ?: 0)
