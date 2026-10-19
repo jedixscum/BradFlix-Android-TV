@@ -80,8 +80,24 @@ can teach BradFlix to read it properly.
 - Add-ons that update themselves, a metadata provider choice, catalog control, custom Home grouping and catalog ordering
 - Custom regular-expression rules to prefer or exclude matching streams during automatic playback
 - A short, skippable Netflix-inspired BradFlix opening animation
+- Linux x86_64 update checks from inside the app, with verified downloads from published GitHub releases
 - Sync between computers through a file in a Syncthing, Nextcloud or Dropbox folder
 - Backups, and no accounts, tracking or analytics
+
+## Linux app updates
+
+Open **Settings → Updates** to check manually. BradFlix also checks when you
+open a profile and offers a new build if one has been published. GitHub Actions
+builds a Linux app artifact when Linux source changes; builds are not published
+automatically. To publish one, open **Actions → Publish Linux update → Run
+workflow**, enter the run ID from a successful **Linux build**, and start the
+workflow. The app will only offer a published Linux release. It verifies the
+download against the release's SHA-256 file before replacing the running app
+file. Close and reopen BradFlix after installation.
+
+Update checks and downloads use `curl`; checksum verification uses `sha256sum`.
+The app must be able to write to its own install folder. For a system-owned
+install, update it using the same administrator installation method instead.
 
 ## Current limitations
 
