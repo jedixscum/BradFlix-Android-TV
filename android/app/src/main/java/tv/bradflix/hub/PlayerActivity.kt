@@ -4,6 +4,9 @@ import android.app.Activity
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.Gravity
+import android.widget.Button
+import android.widget.LinearLayout
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -18,6 +21,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.TrackSelectionDialogBuilder
 import org.json.JSONObject
 
 /** Full-screen in-app video playback with Android TV's standard D-pad controls. */
@@ -55,13 +59,39 @@ class PlayerActivity : Activity() {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
             setBackgroundColor(android.graphics.Color.BLACK)
-            contentDescription = data.optString("title", "BradFlix player")
+            contentDescription = data.optString("title", "BradsHub player")
         }
         playerView = view
-        setContentView(FrameLayout(this).apply {
+        val root = FrameLayout(this).apply {
             setBackgroundColor(android.graphics.Color.BLACK)
             addView(view, FrameLayout.LayoutParams(-1, -1))
-        })
+        }
+        val trackButtons = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(12, 10, 12, 10)
+            setBackgroundColor(android.graphics.Color.argb(190, 12, 12, 12))
+            addView(Button(this@PlayerActivity).apply {
+                text = "Audio"
+                isFocusable = true
+                contentDescription = "Choose audio language"
+                setOnClickListener { showTrackChoices(C.TRACK_TYPE_AUDIO, "Audio language") }
+            })
+            addView(Button(this@PlayerActivity).apply {
+                text = "Subtitles"
+                isFocusable = true
+                contentDescription = "Choose subtitle language"
+                setOnClickListener { showTrackChoices(C.TRACK_TYPE_TEXT, "Subtitles") }
+            })
+        }
+        root.addView(trackButtons, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            Gravity.TOP or Gravity.END
+        ).apply { topMargin = 20; rightMargin = 20 })
+        view.setControllerVisibilityListener { visibility ->
+            trackButtons.visibility = visibility
+        }
+        setContentView(root)
 
         val headers = mutableMapOf<String, String>()
         val headerJson = data.optJSONObject("headers")
@@ -97,6 +127,19 @@ class PlayerActivity : Activity() {
         if (startSeconds > 0) exo.seekTo((startSeconds * 1000).toLong())
         exo.prepare()
         exo.playWhenReady = true
+    }
+
+    private fun showTrackChoices(trackType: Int, title: String) {
+        val exo = player ?: return
+        runCatching {
+            TrackSelectionDialogBuilder(this, title, exo, trackType)
+                .setShowDisableOption(trackType == C.TRACK_TYPE_TEXT)
+                .setAllowAdaptiveSelections(trackType == C.TRACK_TYPE_VIDEO)
+                .build()
+                .show()
+        }.onFailure {
+            Toast.makeText(this, "Track choices are not available for this source.", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun showPlaybackError(error: PlaybackException) {
@@ -136,7 +179,7 @@ class PlayerActivity : Activity() {
     private fun makeMediaItem(uri: Uri, data: JSONObject): MediaItem {
         val builder = MediaItem.Builder()
             .setUri(uri)
-            .setMediaId(data.optString("title", "BradFlix"))
+            .setMediaId(data.optString("title", "BradsHub"))
         when (uri.path.orEmpty().substringAfterLast('.', "").lowercase()) {
             "m3u8" -> builder.setMimeType(MimeTypes.APPLICATION_M3U8)
             "mpd" -> builder.setMimeType(MimeTypes.APPLICATION_MPD)
@@ -145,7 +188,9 @@ class PlayerActivity : Activity() {
         val subtitleConfigurations = mutableListOf<MediaItem.SubtitleConfiguration>()
         if (subtitles != null) {
             for (i in 0 until subtitles.length()) {
-                val subtitleUrl = subtitles.optString(i)
+                val raw = subtitles.opt(i)
+                val entry = raw as? JSONObject
+                val subtitleUrl = entry?.optString("url").orEmpty().ifBlank { raw as? String ?: "" }
                 val subtitleUri = runCatching { Uri.parse(subtitleUrl) }.getOrNull() ?: continue
                 if (subtitleUri.scheme !in listOf("http", "https") || subtitleUri.host.isNullOrBlank()) continue
                 val extension = subtitleUri.path.orEmpty().substringAfterLast('.', "").lowercase()
@@ -157,9 +202,9 @@ class PlayerActivity : Activity() {
                 }
                 val subtitle = MediaItem.SubtitleConfiguration.Builder(subtitleUri)
                     .setMimeType(mime)
-                    .setLanguage(data.optString("subtitleLanguage").ifBlank { "und" })
-                    .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)
-                    .setLabel("Subtitle ${i + 1}")
+                    .setLanguage(entry?.optString("lang").orEmpty().ifBlank { data.optString("subtitleLanguage").ifBlank { "und" } })
+                    .setSelectionFlags(if (i == 0 && !data.optBoolean("subtitlesOff", false)) C.SELECTION_FLAG_DEFAULT else 0)
+                    .setLabel(entry?.optString("label").orEmpty().ifBlank { entry?.optString("lang").orEmpty().ifBlank { "Subtitle ${i + 1}" } })
                     .build()
                 subtitleConfigurations.add(subtitle)
             }
