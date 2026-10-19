@@ -195,8 +195,8 @@ fn install_latest_linux_update() -> Result<String, String> {
         let mut file = std::fs::File::open(&temp_binary).map_err(|e| format!("Could not open the downloaded app: {e}"))?;
         let mut magic = [0u8; 20];
         file.read_exact(&mut magic).map_err(|_| "The downloaded file is not a Linux executable.".to_string())?;
-        if &magic[..4] != b"\x7fELF" || (cfg!(target_arch = "x86_64") && magic[18..20] != [0x3e, 0x00]) {
-            return Err("The update is not a compatible Linux executable.".to_string());
+        if &magic[..4] != b"\x7fELF" || magic[18..20] != [0x3e, 0x00] {
+            return Err("The update is not a compatible Linux x86_64 executable.".to_string());
         }
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&temp_binary, std::fs::Permissions::from_mode(0o755))
